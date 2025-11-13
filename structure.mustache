@@ -1,0 +1,22 @@
+class {{key}} : public Struct<{{key}}>
+{
+public:
+    constexpr static char _name[] = {{key}};
+    constexpr static string_view _codes[] {
+        {{#value}}
+        "{{key}}",
+        {{/value}}
+        };
+    constexpr static int _attribcnt = sizeof(_codes)/sizeof(_codes[0]);
+    constexpr static array<string_view,_domainsz> _descr {
+        {{#value}}
+        "{{value.descr}}",
+        {{/value}}
+        };
+    constexpr static frozen::unordered_map<frozen::string,t_dom,_domainsz> _codeval = {
+        { "b1", t_dom::b1 },
+        { "b2", t_dom::b2 },
+        };
+{{#value}}{{>attrib.mustache}}{{/value}}
+};
+

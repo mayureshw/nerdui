@@ -1,0 +1,29 @@
+enum class e_{{key}} {
+{{#value}}
+    {{key}},
+{{/value}}
+};
+
+class {{key}} : public Domain<{{key}},e_{{key}}>
+{
+public:
+    using t_dom = e_{{key}};
+    constexpr static char _name[] = "{{key}}";
+    constexpr static string_view _codes[] {
+        {{#value}}
+        "{{key}}",
+        {{/value}}
+        };
+    constexpr static int _domainsz = sizeof(_codes)/sizeof(_codes[0]);
+    constexpr static array<string_view,_domainsz> _descr {
+        {{#value}}
+        "{{value}}",
+        {{/value}}
+        };
+    constexpr static frozen::unordered_map<frozen::string,t_dom,_domainsz> _codeval = {
+        {{#value}}
+        { "{{key}}", t_dom::{{key}} },
+        {{/value}}
+        };
+};
+

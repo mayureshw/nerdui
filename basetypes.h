@@ -31,4 +31,12 @@ public:
     Domain(string_view code) : _val(code2val(code)) {}
 };
 
+template <typename T> class Struct
+{
+};
+
+template <typename T> class Attrib
+{
+};
+
 #endif

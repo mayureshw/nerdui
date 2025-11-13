@@ -1,0 +1,8 @@
+#ifndef _GENTYPES_H_
+#define _GENTYPES_H_
+
+#include "basetypes.h"
+
+{{#domains}}{{>domain.mustache}}{{/domains}}
+{{#structures}}{{>structure.mustache}}{{/structures}}
+#endif
