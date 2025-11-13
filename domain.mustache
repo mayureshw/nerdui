@@ -1,7 +1,7 @@
 enum class e_{{key}} {
-{{#value}}
+{{#value.values}}
     {{key}},
-{{/value}}
+{{/value.values}}
 };
 
 class {{key}} : public Domain<{{key}},e_{{key}}>
@@ -9,21 +9,22 @@ class {{key}} : public Domain<{{key}},e_{{key}}>
 public:
     using t_dom = e_{{key}};
     constexpr static char _name[] = "{{key}}";
+    constexpr static char _descr[] = "{{value.descr}}";
     constexpr static string_view _codes[] {
-        {{#value}}
+        {{#value.values}}
         "{{key}}",
-        {{/value}}
+        {{/value.values}}
         };
     constexpr static int _domainsz = sizeof(_codes)/sizeof(_codes[0]);
-    constexpr static array<string_view,_domainsz> _descr {
-        {{#value}}
+    constexpr static array<string_view,_domainsz> _vdescr {
+        {{#value.values}}
         "{{value}}",
-        {{/value}}
+        {{/value.values}}
         };
     constexpr static frozen::unordered_map<frozen::string,t_dom,_domainsz> _codeval = {
-        {{#value}}
+        {{#value.values}}
         { "{{key}}", t_dom::{{key}} },
-        {{/value}}
+        {{/value.values}}
         };
 };
 

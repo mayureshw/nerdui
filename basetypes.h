@@ -15,7 +15,8 @@ template <typename D, typename E> class Domain
     int index() { return static_cast<int>(_val); }
 public:
     string_view code() { return D::_codes[index()]; }
-    string_view descr() { return D::_descr[index()]; }
+    string_view vdescr() { return D::_vdescr[index()]; }
+    string_view descr() { return D::_descr; }
     E code2val(string_view& code)
     {
         auto it = D::_codeval.find(code);
@@ -35,7 +36,11 @@ template <typename T> class Struct
 {
 };
 
-template <typename T> class Attrib
+class BaseAttrib
+{
+};
+
+template <typename T> class Attrib : public BaseAttrib
 {
 };
 
