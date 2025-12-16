@@ -68,6 +68,8 @@ template <typename T, int card_min, int card_max> class Attrib : public BaseAttr
 
     AttrTyp _val;
 public:
+    T& get() requires (card_max == 1) { return _val; }
+    const T& get() const requires (card_max == 1) { return _val; }
     Attrib() requires (card_max != 1) = default;
 
     template<typename... Args> requires (card_max == 1)
