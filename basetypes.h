@@ -48,10 +48,17 @@ class BaseAttrib
 
 template <typename T, int card_min, int card_max> class Attrib : public BaseAttrib
 {
-using AttrTyp = conditional_t< card_max == 1, T,
-    conditional< card_max < 0, vector<T>,
-    array<T,card_max> > >;
-AttrTyp _val;
+    static constexpr bool is_scalar    = ( card_max == 1 );
+    static constexpr bool is_unbounded = ( card_max < 0  );
+    static constexpr bool is_bounded   = ( card_max > 1  );
+
+    using AttrTyp =
+        conditional_t< is_scalar, T,
+        conditional_t< is_unbounded, vector<T>,
+        array<T, card_max>>>;
+
+    AttrTyp _val;
+
 };
 
 #endif
