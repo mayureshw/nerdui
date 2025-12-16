@@ -48,6 +48,11 @@ class BaseAttrib
 
 template <typename T, int card_min, int card_max> class Attrib : public BaseAttrib
 {
+    static_assert(
+        card_max == 1 || is_default_constructible_v<T>,
+        "Non-scalar Attrib requires default-constructible T"
+    );
+
     static constexpr bool is_scalar    = ( card_max == 1 );
     static constexpr bool is_unbounded = ( card_max < 0  );
     static constexpr bool is_bounded   = ( card_max > 1  );
@@ -58,6 +63,13 @@ template <typename T, int card_min, int card_max> class Attrib : public BaseAttr
         array<T, card_max>>>;
 
     AttrTyp _val;
+public:
+    Attrib() requires (card_max != 1) = default;
+
+    template<typename... Args> requires (card_max == 1)
+    explicit Attrib(Args&&... args) : _val(forward<Args>(args)...)
+    {}
+
 
 };
 
