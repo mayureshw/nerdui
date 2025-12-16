@@ -2,6 +2,7 @@
 #define _BASETYPES_H
 
 #include <string>
+#include <string_view>
 #include <sstream>
 #include <iostream>
 #include <array>
@@ -40,8 +41,12 @@ class BaseAttrib
 {
 };
 
-template <typename T> class Attrib : public BaseAttrib
+template <typename T, int card_min, int card_max> class Attrib : public BaseAttrib
 {
+using AttrTyp = conditional_t< card_max == 1, T,
+    conditional< card_max < 0, vector<T>,
+    array<T,card_max> > >;
+AttrTyp _val;
 };
 
 #endif
