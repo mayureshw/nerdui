@@ -34,8 +34,11 @@ public:
     Domain(string_view code) : _val(code2val(code)) {}
 };
 
-template <typename T> class Union
+template <typename T, typename ST> class Union
 {
+    ST& _selector;
+public:
+    Union(ST& selector) : _selector(selector) {}
 };
 
 template <typename T> class Struct
