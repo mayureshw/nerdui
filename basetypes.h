@@ -34,11 +34,12 @@ public:
     Domain(string_view code) : _val(code2val(code)) {}
 };
 
-template <typename T, typename ST> class Union
+template <typename T, typename SelectorType, typename... UnionOf> class Union
 {
-    ST& _selector;
+    SelectorType& _selector;
+    variant<monostate,UnionOf...> _u;
 public:
-    Union(ST& selector) : _selector(selector) {}
+    Union(SelectorType& selector) : _selector(selector) {}
 };
 
 template <typename T> class Struct

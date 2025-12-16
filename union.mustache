@@ -1,6 +1,5 @@
-class {{key}} : public Union<{{key}},{{value.selectorTyp}}>
+class {{key}} : public Union<{{key}},{{value.selectorTyp}},{{#value.cases}}{{value}}{{^is_last}},{{/is_last}}{{/value.cases}}>
 {
-    variant<monostate,{{#value.cases}}{{value}}{{^is_last}},{{/is_last}}{{/value.cases}}> _u;
 public:
     constexpr static char _name[] = "{{key}}";
     constexpr static char _descr[] = "{{value.descr}}";
