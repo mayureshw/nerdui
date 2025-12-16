@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iostream>
 #include <array>
+#include <variant>
 #include <frozen/unordered_map.h>
 #include <frozen/string.h>
 using namespace std;
@@ -31,6 +32,10 @@ public:
     }
     Domain(E val) : _val(val) {}
     Domain(string_view code) : _val(code2val(code)) {}
+};
+
+template <typename T> class Union
+{
 };
 
 template <typename T> class Struct
