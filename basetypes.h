@@ -13,7 +13,7 @@ using namespace std;
 
 template <typename D, typename E> class Domain
 {
-    const E _val;
+    E _val;
     int index() { return static_cast<int>(_val); }
 public:
     string_view code() { return D::_codes[index()]; }
@@ -32,6 +32,7 @@ public:
     }
     Domain(E val) : _val(val) {}
     Domain(string_view code) : _val(code2val(code)) {}
+    Domain() = default;
 };
 
 template <typename T, typename SelectorType, typename... UnionOf> class Union
@@ -70,6 +71,7 @@ template <typename T, int card_min, int card_max> class Attrib : public BaseAttr
 public:
     T& get() requires (card_max == 1) { return _val; }
     const T& get() const requires (card_max == 1) { return _val; }
+
     Attrib() requires (card_max != 1) = default;
 
     template<typename... Args> requires (card_max == 1)
