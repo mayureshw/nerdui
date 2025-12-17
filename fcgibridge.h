@@ -18,9 +18,17 @@ public:
         FCGX_InitRequest(&req, 0, 0);
         while (FCGX_Accept_r(&req) == 0)
         {
-            auto raw_query = FCGX_GetParam("QUERY_STRING", req.envp);
-            auto query = Query::parse(raw_query);
-            auto response = getResponse(query);
+            const char* clen_str = FCGX_GetParam("CONTENT_LENGTH", req.envp);
+            int clen = clen_str ? stoi(clen_str) : 0;
+            string post_data(clen, '\0');
+            FCGX_GetStr(post_data.data(), clen, req.in); // read POST body
+            auto post_query = Query::parse(post_data);   // parse URL-encoded
+
+            auto get_query_raw = FCGX_GetParam("QUERY_STRING", req.envp);
+            auto get_query = Query::parse(get_query_raw);
+            for(auto k : get_query.list()) post_query[k] = get_query[k];
+
+            auto response = getResponse(post_query);
             FCGX_PutS("Content-Type: text/html\r\n\r\n", req.out);
             FCGX_PutStr(response.c_str(), response.size(), req.out);
             FCGX_Finish_r(&req);
