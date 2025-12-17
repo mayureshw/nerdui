@@ -2,9 +2,28 @@
 #include <memory>
 #include <unordered_map>
 #include "types.h"
+#include <mustache.hpp>
 #include "fcgibridge.h"
 
 inline const string kwd_sessionid = "sessionid";
+
+constexpr char resp[] = R"(
+<!DOCTYPE html>
+<html>
+<head>
+    <title>)" APP_TITLE R"(</title>
+</head>
+<body>
+
+<form method="post" action="">
+    {{form}}
+    <input type="hidden" name="sessionid" value="{{sessionid}}">
+    <button type="submit">Submit</button>
+</form>
+
+</body>
+</html>
+)";
 
 class Session
 {
@@ -20,11 +39,19 @@ class Session
             os << hex << setw(2) << setfill('0') << (int)b;
         return os.str();
     }
+    // Tricky mustache quirk. template doesn't work as static member
+    kainjow::mustache::mustache& tmpl_resp() const {
+        static kainjow::mustache::mustache t{resp};
+        return t;
+    }
 public:
     string& id() { return _sessionid; }
     string getResponse(Query& query)
     {
-        return "<p>valid session<p>";
+        kainjow::mustache::data data;
+        data.set(kwd_sessionid, _sessionid);
+        auto ret= tmpl_resp().render(data);
+        return ret;
     }
     Session()
     {
@@ -39,7 +66,7 @@ public:
 
 class SessionManager : public FCGIBridge
 {
-    unordered_map<string,unique_ptr<Session>> _sessions;
+    unordered_map<string,Session*> _sessions;
 public:
     string getResponse(Query& query)
     {
@@ -53,9 +80,11 @@ public:
         else
         {
             // TODO: Until session expiry is implemented, we'll empty the sessions
-            _sessions.clear(); // unique_ptr deletes the sessions
-            auto session = make_unique<Session>();
-            _sessions.emplace( session->id(), move(session) );
+            for( auto it = _sessions.begin(); it != _sessions.end(); it++ )
+                delete it->second;
+            _sessions.clear();
+            auto session = new Session();
+            _sessions.emplace( session->id(), session );
             return session->getResponse(query);
         }
     }
