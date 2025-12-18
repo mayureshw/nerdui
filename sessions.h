@@ -25,13 +25,14 @@ constexpr char resp[] = R"(
 </html>
 )";
 
+inline const size_t uid_length = 16; // bytes
 class Session
 {
     string _sessionid;
     Struct<DefaultSessionType>* _sessionobj;
     string make_session_id()
     {
-        array<unsigned char, 32> buf; // 256 bits
+        array<unsigned char, uid_length> buf;
         arc4random_buf(buf.data(), buf.size());
     
         ostringstream os;
