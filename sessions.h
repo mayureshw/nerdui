@@ -55,8 +55,8 @@ public:
         data.set(kwd_sessionid, _sessionid);
         _sessionobj->getResponse(_resp);
         data.set(kwd_form,_resp.str());
-        auto ret= tmpl_resp().render(data);
-        return ret;
+        _resp.clear();
+        return tmpl_resp().render(data);
     }
     Session()
     {

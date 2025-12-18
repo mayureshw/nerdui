@@ -14,12 +14,12 @@ using namespace std;
 class Response
 {
     ostringstream _resp;
+public:
     void clear()
     {
         _resp.str("");
         _resp.clear();
     }
-public:
     template <typename T>
     Response& operator<<(const T& v)
     {
@@ -71,11 +71,19 @@ public:
 
 template <typename T> class Struct
 {
+    T& tinst() { return static_cast<T&>(*this); }
 public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
-        resp << "<p>Hello world</p>" << endl;
+        resp << "<p>" << T::_descr << "</p>" << endl;
+        resp << "<ul>" << endl;
+        for( auto attr : tinst()._attribs )
+        {
+            resp << "<li>" << endl;
+            resp << "</li>" << endl;
+        }
+        resp << "</ul>" << endl;
     }
 };
 
