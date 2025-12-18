@@ -14,12 +14,16 @@ using namespace std;
 class Response
 {
     ostringstream _resp;
+    bool _found_input = false;
 public:
     void clear()
     {
         _resp.str("");
         _resp.clear();
+        _found_input = false;
     }
+    void foundInput() { _found_input = true; }
+    bool isInputFound() { return _found_input; }
     template <typename T>
     Response& operator<<(const T& v)
     {
@@ -81,7 +85,9 @@ public:
         for( auto attr : tinst()._attribs )
         {
             resp << "<li>" << endl;
+            attr->getResponse(resp);
             resp << "</li>" << endl;
+            if( resp.isInputFound() ) break;
         }
         resp << "</ul>" << endl;
     }
@@ -90,6 +96,7 @@ public:
 class BaseAttrib
 {
 public:
+    virtual void getResponse(Response& resp)=0;
     virtual bool isStruct()=0;
     virtual ~BaseAttrib() = default;
 };
@@ -113,6 +120,10 @@ template <typename T, int card_min, int card_max> class Attrib : public BaseAttr
     AttrTyp _val;
     bool _is_set = false;
 public:
+    void getResponse(Response& resp)
+    {
+        resp.foundInput();
+    }
     void set(string inpstr)
     {
         _is_set = true;

@@ -61,7 +61,7 @@ public:
     Session()
     {
         _sessionid = make_session_id();
-        _sessionobj = new Struct<DefaultSessionType>();
+        _sessionobj = new DefaultSessionType();
     }
     ~Session()
     {
