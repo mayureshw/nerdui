@@ -11,6 +11,30 @@
 #include <frozen/string.h>
 using namespace std;
 
+class Response
+{
+    ostringstream _resp;
+    void clear()
+    {
+        _resp.str("");
+        _resp.clear();
+    }
+public:
+    template <typename T>
+    Response& operator<<(const T& v)
+    {
+        _resp << v;
+        return *this;
+    }
+    // Required to support manipulators like endl
+    Response& operator<<(ostream& (*manip)(ostream&))
+    {
+        manip(_resp);
+        return *this;
+    }
+    string str() { return _resp.str(); }
+};
+
 template <typename D, typename E> class Domain
 {
     E _val;
@@ -49,6 +73,10 @@ template <typename T> class Struct
 {
 public:
     static bool isStruct() { return true; }
+    void getResponse(Response& resp)
+    {
+        resp << "<p>Hello world</p>" << endl;
+    }
 };
 
 class BaseAttrib
@@ -75,7 +103,13 @@ template <typename T, int card_min, int card_max> class Attrib : public BaseAttr
         array<T, card_max>>>;
 
     AttrTyp _val;
+    bool _is_set = false;
 public:
+    void set(string inpstr)
+    {
+        _is_set = true;
+    }
+    bool isSet() { return _is_set; }
     bool isStruct() { return AttrTyp::isStruct(); }
     T& get() requires (card_max == 1) { return _val; }
     const T& get() const requires (card_max == 1) { return _val; }

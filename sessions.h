@@ -6,6 +6,7 @@
 #include "fcgibridge.h"
 
 inline const string kwd_sessionid = "sessionid";
+inline const string kwd_form = "form";
 
 constexpr char resp[] = R"(
 <!DOCTYPE html>
@@ -16,7 +17,7 @@ constexpr char resp[] = R"(
 <body>
 
 <form method="post" action="">
-    {{form}}
+    {{{form}}}
     <input type="hidden" name="sessionid" value="{{sessionid}}">
     <button type="submit">Submit</button>
 </form>
@@ -30,6 +31,7 @@ class Session
 {
     string _sessionid;
     Struct<DefaultSessionType>* _sessionobj;
+    Response _resp;
     string make_session_id()
     {
         array<unsigned char, uid_length> buf;
@@ -51,6 +53,8 @@ public:
     {
         kainjow::mustache::data data;
         data.set(kwd_sessionid, _sessionid);
+        _sessionobj->getResponse(_resp);
+        data.set(kwd_form,_resp.str());
         auto ret= tmpl_resp().render(data);
         return ret;
     }
