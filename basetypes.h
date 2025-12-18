@@ -16,6 +16,7 @@ template <typename D, typename E> class Domain
     E _val;
     int index() { return static_cast<int>(_val); }
 public:
+    static bool isStruct() { return false; }
     string_view code() { return D::_codes[index()]; }
     string_view vdescr() { return D::_vdescr[index()]; }
     string_view descr() { return D::_descr; }
@@ -40,15 +41,21 @@ template <typename T, typename SelectorType, typename... UnionOf> class Union
     SelectorType& _selector;
     variant<monostate,UnionOf...> _u;
 public:
+    static bool isStruct() { return true; }
     Union(SelectorType& selector) : _selector(selector) {}
 };
 
 template <typename T> class Struct
 {
+public:
+    static bool isStruct() { return true; }
 };
 
 class BaseAttrib
 {
+public:
+    virtual bool isStruct()=0;
+    virtual ~BaseAttrib() = default;
 };
 
 template <typename T, int card_min, int card_max> class Attrib : public BaseAttrib
@@ -69,6 +76,7 @@ template <typename T, int card_min, int card_max> class Attrib : public BaseAttr
 
     AttrTyp _val;
 public:
+    bool isStruct() { return AttrTyp::isStruct(); }
     T& get() requires (card_max == 1) { return _val; }
     const T& get() const requires (card_max == 1) { return _val; }
 
