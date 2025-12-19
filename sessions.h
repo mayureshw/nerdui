@@ -47,10 +47,19 @@ class Session
         static kainjow::mustache::mustache t{resp};
         return t;
     }
+    void updateState(Query& query)
+    {
+        auto settable = _resp.settable();
+        if ( not settable ) return;
+        auto fieldname = settable->fieldname();
+        auto value = query[fieldname];
+        if ( query.contains(fieldname) ) settable->set(value);
+    }
 public:
     string& id() { return _sessionid; }
     string getResponse(Query& query)
     {
+        updateState(query);
         kainjow::mustache::data data;
         data.set(kwd_sessionid, _sessionid);
         _sessionobj->getResponse(_resp);

@@ -12,25 +12,40 @@
 using namespace std;
 
 namespace html {
-    constexpr string_view select_open  = "<select name=\"";
-    constexpr string_view select_close = "</select>";
-    constexpr string_view opt_open     = "<option value=\"";
-    constexpr string_view opt_mid      = "\">";
-    constexpr string_view opt_close    = "</option>";
+    constexpr string_view
+        select_open  = "<select name=\"",
+        select_close = "</select>",
+        opt_open     = "<option value=\"",
+        opt_mid      = "\">",
+        opt_close    = "</option>";
 }
+
+class Settable
+{
+public:
+    virtual void set(string_view)=0;
+    virtual string fieldname()=0;
+};
 
 class Response
 {
     ostringstream _resp;
     bool _found_input = false;
+    Settable *_settable = nullptr;
 public:
+    Settable* settable() { return _settable; }
     void clear()
     {
         _resp.str("");
         _resp.clear();
         _found_input = false;
+        _settable = nullptr;
     }
-    void foundInput() { _found_input = true; }
+    void foundInput(Settable *settable)
+    {
+        _settable = settable;
+        _found_input = true;
+    }
     bool isInputFound() { return _found_input; }
     template <typename T>
     Response& operator<<(const T& v)
@@ -47,7 +62,7 @@ public:
     string str() { return _resp.str(); }
 };
 
-template <typename D, typename E> class Domain
+template <typename D, typename E> class Domain : public Settable
 {
     E _val;
     bool _is_set = false;
@@ -58,17 +73,22 @@ template <typename D, typename E> class Domain
              << D::_name
              << "\">";
 
-        for (size_t i = 0; i < D::_domainsz; i++) {
+        for (size_t i = 0; i < D::_domainsz; i++)
             resp << html::opt_open
                  << D::_codes[i]
                  << html::opt_mid
                  << D::_vdescr[i]
                  << html::opt_close;
-        }
 
         resp << html::select_close;
     }
 public:
+    void set(string_view val)
+    {
+        _val = code2val(val);
+        _is_set = true;
+    }
+    string fieldname() { return D::_name; }
     static bool isStruct() { return false; }
     string_view code() { return D::_codes[index()]; }
     string_view vdescr() { return D::_vdescr[index()]; }
@@ -89,7 +109,7 @@ public:
         if ( not _is_set )
         {
             getInputWidget(resp);
-            resp.foundInput();
+            resp.foundInput(this);
         }
         else resp << "<p>Domain resp not implemented</p>";
     }
