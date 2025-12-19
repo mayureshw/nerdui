@@ -1,11 +1,12 @@
 __settings__:
   map_as_list:
-    - /domains
-    - /domains/*/values
-    - /structures
-    - /structures/*/attribs
-    - /unions
-    - /unions/*/cases
+    /domains : ''
+    /domains/*/values : ''
+    /structures : ''
+    /structures/*/attribs : ''
+    /unions : ''
+    /unions/*/cases : ''
+    /unions/*/cases/* : sub
   defaults:
     /structures/*/attribs/*:
       card_min : 0
