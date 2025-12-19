@@ -11,6 +11,14 @@
 #include <frozen/string.h>
 using namespace std;
 
+namespace html {
+    constexpr string_view select_open  = "<select name=\"";
+    constexpr string_view select_close = "</select>";
+    constexpr string_view opt_open     = "<option value=\"";
+    constexpr string_view opt_mid      = "\">";
+    constexpr string_view opt_close    = "</option>";
+}
+
 class Response
 {
     ostringstream _resp;
@@ -42,7 +50,24 @@ public:
 template <typename D, typename E> class Domain
 {
     E _val;
+    bool _is_set = false;
     int index() { return static_cast<int>(_val); }
+    void getInputWidget(Response& resp)
+    {
+        resp << html::select_open
+             << D::_name
+             << "\">";
+
+        for (size_t i = 0; i < D::_domainsz; i++) {
+            resp << html::opt_open
+                 << D::_codes[i]
+                 << html::opt_mid
+                 << D::_vdescr[i]
+                 << html::opt_close;
+        }
+
+        resp << html::select_close;
+    }
 public:
     static bool isStruct() { return false; }
     string_view code() { return D::_codes[index()]; }
@@ -61,6 +86,12 @@ public:
     }
     void getResponse(Response& resp)
     {
+        if ( not _is_set )
+        {
+            getInputWidget(resp);
+            resp.foundInput();
+        }
+        else resp << "<p>Domain resp not implemented</p>";
     }
 };
 
@@ -74,7 +105,7 @@ struct SelectorCase
 
 template <typename T, typename SelectorType, typename... Cases> class Union
 {
-using t_storage = std::variant<std::monostate, typename Cases::t_Variant...>;
+using t_storage = variant<monostate, typename Cases::t_Variant...>;
 
     SelectorType& _selector;
     t_storage _u;
@@ -82,6 +113,7 @@ public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
+        resp << "<p>Union resp not implemented</p>";
     }
     Union(SelectorType& selector) : _selector(selector) {}
 };

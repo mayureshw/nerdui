@@ -15,7 +15,7 @@ public:
         "{{key}}",
         {{/value.values}}
         };
-    constexpr static int _domainsz = sizeof(_codes)/sizeof(_codes[0]);
+    constexpr static size_t _domainsz = sizeof(_codes)/sizeof(_codes[0]);
     constexpr static array<string_view,_domainsz> _vdescr {
         {{#value.values}}
         "{{value}}",
