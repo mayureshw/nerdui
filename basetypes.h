@@ -59,17 +59,30 @@ public:
         }
         return it->second;
     }
-    Domain(E val) : _val(val) {}
-    Domain(string_view code) : _val(code2val(code)) {}
-    Domain() = default;
+    void getResponse(Response& resp)
+    {
+    }
 };
 
-template <typename T, typename SelectorType, typename... UnionOf> class Union
+template<typename SelectorDomainEnum, SelectorDomainEnum Code, typename VariantType>
+struct SelectorCase
 {
+    using t_Code = SelectorDomainEnum;
+    static constexpr t_Code code = Code;
+    using t_Variant = VariantType;
+};
+
+template <typename T, typename SelectorType, typename... Cases> class Union
+{
+using t_storage = std::variant<std::monostate, typename Cases::t_Variant...>;
+
     SelectorType& _selector;
-    variant<monostate,UnionOf...> _u;
+    t_storage _u;
 public:
     static bool isStruct() { return true; }
+    void getResponse(Response& resp)
+    {
+    }
     Union(SelectorType& selector) : _selector(selector) {}
 };
 
@@ -80,7 +93,7 @@ public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
-        resp << "<p>" << T::_descr << "</p>" << endl;
+        resp << "<p>" << T::_descr << ":</p>" << endl;
         resp << "<ul>" << endl;
         for( auto attr : tinst()._attribs )
         {
@@ -118,17 +131,8 @@ template <typename T, int card_min, int card_max> class Attrib : public BaseAttr
         array<T, card_max>>>;
 
     AttrTyp _val;
-    bool _is_set = false;
 public:
-    void getResponse(Response& resp)
-    {
-        resp.foundInput();
-    }
-    void set(string inpstr)
-    {
-        _is_set = true;
-    }
-    bool isSet() { return _is_set; }
+    void getResponse(Response& resp) requires (is_scalar) { _val.getResponse(resp); }
     bool isStruct() { return AttrTyp::isStruct(); }
     T& get() requires (card_max == 1) { return _val; }
     const T& get() const requires (card_max == 1) { return _val; }
