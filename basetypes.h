@@ -112,7 +112,7 @@ public:
             getInputWidget(resp);
             resp.foundInput(this);
         }
-        else resp << "<p>Domain resp not implemented</p>";
+        else resp << descr() << ": " << vdescr();
     }
 };
 
