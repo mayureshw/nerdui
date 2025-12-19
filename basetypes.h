@@ -39,7 +39,6 @@ public:
         _resp.str("");
         _resp.clear();
         _found_input = false;
-        _settable = nullptr;
     }
     void foundInput(Settable *settable)
     {
@@ -71,16 +70,18 @@ template <typename D, typename E> class Domain : public Settable
     {
         resp << html::select_open
              << D::_name
-             << "\">";
+             << "\">"
+             << endl;
 
         for (size_t i = 0; i < D::_domainsz; i++)
             resp << html::opt_open
                  << D::_codes[i]
                  << html::opt_mid
                  << D::_vdescr[i]
-                 << html::opt_close;
+                 << html::opt_close
+                 << endl;
 
-        resp << html::select_close;
+        resp << html::select_close << endl;
     }
 public:
     void set(string_view val)

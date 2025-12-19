@@ -52,8 +52,7 @@ class Session
         auto settable = _resp.settable();
         if ( not settable ) return;
         auto fieldname = settable->fieldname();
-        auto value = query[fieldname];
-        if ( query.contains(fieldname) ) settable->set(value);
+        if ( query.contains(fieldname) ) settable->set(query[fieldname]);
     }
 public:
     string& id() { return _sessionid; }
