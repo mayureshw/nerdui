@@ -6,7 +6,7 @@ __settings__:
     /structures/*/attribs : ''
     /unions : ''
     /unions/*/cases : ''
-    /unions/*/cases/* : sub
+    /unions/*/cases/* : sub_
   defaults:
     /structures/*/attribs/*:
       card_min : 0

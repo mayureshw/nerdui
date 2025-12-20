@@ -1,9 +1,4 @@
-class {{key}} : public Union<{{key}},{{value.selectorTyp}},
-    {{#value.cases}}
-    {{#value}}
-    SelectorCase<e_{{key}},e_{{key}}::{{subkey}},{{subvalue}}>{{^is_last}},{{/is_last}}{{/value}}{{^is_last}},{{/is_last}}
-    {{/value.cases}}
-    >
+class {{key}} : public Union<{{key}},{{value.selectorTyp}},{{#value.cases}}{{#value}}{{sub_value}}{{^sub_is_last}},{{/sub_is_last}}{{/value}}{{^is_last}},{{/is_last}}{{/value.cases}}>
 {
 public:
     constexpr static char _name[] = "{{key}}";
