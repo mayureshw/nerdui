@@ -11,6 +11,11 @@
 #include <frozen/string.h>
 using namespace std;
 
+// Common pattern to use with visit
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
 namespace html {
     constexpr string_view
         select_open  = "<select name=\"",
@@ -122,8 +127,8 @@ template <typename T, typename SelectorType, typename... UnionOf> class Union
     T& tinst() { return static_cast<T&>(*this); }
 protected:
     SelectorType& _selector;
-    variant<monostate,UnionOf...> _u;
 public:
+    variant<monostate,UnionOf...> _u;
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
