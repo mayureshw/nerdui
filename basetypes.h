@@ -84,6 +84,7 @@ template <typename D, typename E> class Domain : public Settable
         resp << html::select_close << endl;
     }
 public:
+    E val() { return _val; }
     void set(string_view val)
     {
         _val = code2val(val);
@@ -116,20 +117,11 @@ public:
     }
 };
 
-template<typename SelectorDomainEnum, SelectorDomainEnum Code, typename VariantType>
-struct SelectorCase
+template <typename T, typename SelectorType, typename... UnionOf> class Union
 {
-    using t_Code = SelectorDomainEnum;
-    static constexpr t_Code code = Code;
-    using t_Variant = VariantType;
-};
-
-template <typename T, typename SelectorType, typename... Cases> class Union
-{
-using t_storage = variant<monostate, typename Cases::t_Variant...>;
-
+protected:
     SelectorType& _selector;
-    t_storage _u;
+    variant<monostate,UnionOf...> _u;
 public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
