@@ -17,6 +17,24 @@ public:
         }
 {{/value.selectorIsUnion}}
 {{#value.selectorIsUnion}}
+        visit(overloaded{
+        [&](monostate& curvariant) {
+            return cb.template operator()<monostate>();
+        },
+{{#value.cases}}
+        [&]({{key}}& curvariant) {
+        using t_selectorEnum = e_{{key}};
+            switch(curvariant.val()) {
+{{#value}}
+            case t_selectorEnum::{{sub_key}}: return cb.template operator()<{{sub_value}}>();
+{{/value}}
+            default: return cb.template operator()<monostate>();
+            }
+{{#value}}
+{{/value}}
+        },
+{{/value.cases}}
+        }, _selector._u);
 {{/value.selectorIsUnion}}
     }
 };
