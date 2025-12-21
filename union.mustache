@@ -1,30 +1,22 @@
 class {{key}} : public Union<{{key}},{{value.selectorTyp}},{{#value.cases}}{{#value}}{{sub_value}}{{^sub_is_last}},{{/sub_is_last}}{{/value}}{{^is_last}},{{/is_last}}{{/value.cases}}>
 {
-    enum e_SelectIndex {
-{{#value.cases}}
-{{#value}}
-        {{key}}_{{sub_key}},
-{{/value}}
-{{/value.cases}}
-    };
 public:
     constexpr static char _name[] = "{{key}}";
     constexpr static char _descr[] = "{{value.descr}}";
-    int selctorIndex()
+    template <typename Callback> void dispatch(Callback cb)
     {
 {{^value.selectorIsUnion}}
         using t_selectorEnum = e_{{value.selectorTyp}};
         switch( _selector.val() ) {
 {{#value.cases}}
 {{#value}}
-        case t_selectorEnum::{{sub_key}}: return {{key}}_{{sub_key}} + 1;
+        case t_selectorEnum::{{sub_key}}: return cb.template operator()<{{sub_value}}>();
 {{/value}}
 {{/value.cases}}
-        default: return 0;
+        default: return cb.template operator()<monostate>();
         }
 {{/value.selectorIsUnion}}
 {{#value.selectorIsUnion}}
-        return 0;
 {{/value.selectorIsUnion}}
     }
 };

@@ -119,6 +119,7 @@ public:
 
 template <typename T, typename SelectorType, typename... UnionOf> class Union
 {
+    T& tinst() { return static_cast<T&>(*this); }
 protected:
     SelectorType& _selector;
     variant<monostate,UnionOf...> _u;
@@ -126,7 +127,19 @@ public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
-        resp << "<p>Union resp not implemented</p>";
+        return tinst().dispatch(
+            [this,&resp]<typename VT>() {
+            this->template getResponseImpl<VT>(resp);
+            });
+    }
+    template<typename VT> void getResponseImpl(Response& resp)
+    {
+        if constexpr ( not is_same_v<VT,monostate> )
+        {
+            if (!holds_alternative<VT>(_u)) _u.template emplace<VT>();
+            auto& v = get<VT>(_u);
+            v.getResponse(resp);
+        }
     }
     Union(SelectorType& selector) : _selector(selector) {}
 };
