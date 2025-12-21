@@ -1,5 +1,12 @@
 class {{key}} : public Union<{{key}},{{value.selectorTyp}},{{#value.cases}}{{#value}}{{sub_value}}{{^sub_is_last}},{{/sub_is_last}}{{/value}}{{^is_last}},{{/is_last}}{{/value.cases}}>
 {
+    enum e_SelectIndex {
+{{#value.cases}}
+{{#value}}
+        {{key}}_{{sub_key}},
+{{/value}}
+{{/value.cases}}
+    };
 public:
     constexpr static char _name[] = "{{key}}";
     constexpr static char _descr[] = "{{value.descr}}";
