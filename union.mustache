@@ -10,5 +10,22 @@ class {{key}} : public Union<{{key}},{{value.selectorTyp}},{{#value.cases}}{{#va
 public:
     constexpr static char _name[] = "{{key}}";
     constexpr static char _descr[] = "{{value.descr}}";
+    int selctorIndex()
+    {
+{{^value.selectorIsUnion}}
+        using t_selectorEnum = e_{{value.selectorTyp}};
+        switch( _selector.val() ) {
+{{#value.cases}}
+{{#value}}
+        case t_selectorEnum::{{sub_key}}: return {{key}}_{{sub_key}} + 1;
+{{/value}}
+{{/value.cases}}
+        default: return 0;
+        }
+{{/value.selectorIsUnion}}
+{{#value.selectorIsUnion}}
+        return 0;
+{{/value.selectorIsUnion}}
+    }
 };
 
