@@ -18,9 +18,6 @@ public:
 {{/value.selectorIsUnion}}
 {{#value.selectorIsUnion}}
         visit(overloaded{
-        [&](monostate& curvariant) {
-            return cb.template operator()<monostate>();
-        },
 {{#value.cases}}
         [&]({{key}}& curvariant) {
         using t_selectorEnum = e_{{key}};
@@ -34,6 +31,9 @@ public:
 {{/value}}
         },
 {{/value.cases}}
+        [&](auto& curvariant) {
+            return cb.template operator()<monostate>();
+        },
         }, _selector._u);
 {{/value.selectorIsUnion}}
     }
