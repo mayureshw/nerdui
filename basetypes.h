@@ -76,8 +76,7 @@ template <typename D, typename E> class Domain : public Settable
         resp << D::_descr << ": "
              << html::select_open
              << D::_name
-             << "\">"
-             << endl;
+             << "\">\n";
 
         for (size_t i = 0; i < D::_domainsz; i++)
             resp << html::opt_open
@@ -85,9 +84,9 @@ template <typename D, typename E> class Domain : public Settable
                  << html::opt_mid
                  << D::_vdescr[i]
                  << html::opt_close
-                 << endl;
+                 << "\n";
 
-        resp << html::select_close << endl;
+        resp << html::select_close << "\n";
     }
 public:
     E val() { return _val; }
@@ -157,16 +156,16 @@ public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
-        resp << "<p>" << T::_descr << ":</p>" << endl;
-        resp << "<ul>" << endl;
+        resp << "<p>" << T::_descr << ":</p>\n"
+            << "<ul>\n";
         for( auto attr : tinst()._attribs )
         {
-            resp << "<li>" << endl;
+            resp << "<li>\n";
             attr->getResponse(resp);
-            resp << "</li>" << endl;
+            resp << "</li>\n";
             if( resp.isInputFound() ) break;
         }
-        resp << "</ul>" << endl;
+        resp << "</ul>\n";
     }
 };
 
