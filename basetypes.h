@@ -21,6 +21,8 @@ class HtmlFormatter
     ostream& _os;
 public:
     void text(string_view s) { _os << s; }
+    template <typename... Args> void text(Args&&... args)
+    { (_os << ... << forward<Args>(args)); }
     void nl() { _os << "\n"; }
     void li_open() { _os << "<li>"; }
     void li_close() { _os << "</li>"; }
@@ -28,7 +30,8 @@ public:
     void ul_close() { _os << "</ul>"; }
     void p_open() { _os << "<p>"; }
     void p_close() { _os << "</p>"; }
-    void p(string_view s) { p_open(); text(s); p_close(); }
+    template <typename... Args> void p(Args&&... args)
+    { p_open(); text(forward<Args>(args)...); p_close(); }
     void select_open(string_view name) { _os << "<select name=\"" << name << "\">"; }
     void select_close() { _os << "</select>"; }
     void option(string_view code, string_view s)
@@ -73,8 +76,7 @@ template <typename D, typename E> class Domain : public Settable
     int index() { return static_cast<int>(_val); }
     void getInputWidget(Response& resp)
     {
-        resp.hf.text(D::_descr);
-        resp.hf.text(": ");
+        resp.hf.text(D::_descr,": ");
         resp.hf.select_open(D::_name);
         resp.hf.nl();
 
@@ -116,12 +118,7 @@ public:
             getInputWidget(resp);
             resp.foundInput(this);
         }
-        else
-        {
-            resp.hf.text( descr() );
-            resp.hf.text( ": " );
-            resp.hf.text( vdescr() );
-        }
+        else resp.hf.text( descr(), ": ", vdescr() );
     }
 };
 
@@ -159,10 +156,7 @@ public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
-        resp.hf.p_open();
-        resp.hf.text(T::_descr);
-        resp.hf.text(":");
-        resp.hf.p_close();
+        resp.hf.p(T::_descr,":");
 
         resp.hf.ul_open();
         resp.hf.nl();
