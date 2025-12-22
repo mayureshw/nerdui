@@ -73,7 +73,8 @@ template <typename D, typename E> class Domain : public Settable
     int index() { return static_cast<int>(_val); }
     void getInputWidget(Response& resp)
     {
-        resp << html::select_open
+        resp << D::_descr << ": "
+             << html::select_open
              << D::_name
              << "\">"
              << endl;
