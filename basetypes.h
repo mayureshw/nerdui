@@ -16,14 +16,25 @@ template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-namespace html {
-    constexpr string_view
-        select_open  = "<select name=\"",
-        select_close = "</select>",
-        opt_open     = "<option value=\"",
-        opt_mid      = "\">",
-        opt_close    = "</option>";
-}
+class HtmlFormatter
+{
+    ostream& _os;
+public:
+    void text(string_view s) { _os << s; }
+    void nl() { _os << "\n"; }
+    void li_open() { _os << "<li>"; }
+    void li_close() { _os << "</li>"; }
+    void ul_open() { _os << "<ul>"; }
+    void ul_close() { _os << "</ul>"; }
+    void p_open() { _os << "<p>"; }
+    void p_close() { _os << "</p>"; }
+    void p(string_view s) { p_open(); text(s); p_close(); }
+    void select_open(string_view name) { _os << "<select name=\"" << name << "\">"; }
+    void select_close() { _os << "</select>"; }
+    void option(string_view code, string_view s)
+    { _os << "<option value=\"" << code << "\">" << s << "</option>"; }
+    HtmlFormatter(ostream& os) : _os(os) {}
+};
 
 class Settable
 {
@@ -38,6 +49,7 @@ class Response
     bool _found_input = false;
     Settable *_settable = nullptr;
 public:
+    HtmlFormatter hf {_resp};
     Settable* settable() { return _settable; }
     void clear()
     {
@@ -51,18 +63,6 @@ public:
         _found_input = true;
     }
     bool isInputFound() { return _found_input; }
-    template <typename T>
-    Response& operator<<(const T& v)
-    {
-        _resp << v;
-        return *this;
-    }
-    // Required to support manipulators like endl
-    Response& operator<<(ostream& (*manip)(ostream&))
-    {
-        manip(_resp);
-        return *this;
-    }
     string str() { return _resp.str(); }
 };
 
@@ -73,20 +73,18 @@ template <typename D, typename E> class Domain : public Settable
     int index() { return static_cast<int>(_val); }
     void getInputWidget(Response& resp)
     {
-        resp << D::_descr << ": "
-             << html::select_open
-             << D::_name
-             << "\">\n";
+        resp.hf.text(D::_descr);
+        resp.hf.text(": ");
+        resp.hf.select_open(D::_name);
+        resp.hf.nl();
 
         for (size_t i = 0; i < D::_domainsz; i++)
-            resp << html::opt_open
-                 << D::_codes[i]
-                 << html::opt_mid
-                 << D::_vdescr[i]
-                 << html::opt_close
-                 << "\n";
-
-        resp << html::select_close << "\n";
+        {
+            resp.hf.option(D::_codes[i], D::_vdescr[i]);
+            resp.hf.nl();
+        }
+        resp.hf.select_close();
+        resp.hf.nl();
     }
 public:
     E val() { return _val; }
@@ -118,7 +116,12 @@ public:
             getInputWidget(resp);
             resp.foundInput(this);
         }
-        else resp << descr() << ": " << vdescr();
+        else
+        {
+            resp.hf.text( descr() );
+            resp.hf.text( ": " );
+            resp.hf.text( vdescr() );
+        }
     }
 };
 
@@ -156,16 +159,25 @@ public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
-        resp << "<p>" << T::_descr << ":</p>\n"
-            << "<ul>\n";
+        resp.hf.p_open();
+        resp.hf.text(T::_descr);
+        resp.hf.text(":");
+        resp.hf.p_close();
+
+        resp.hf.ul_open();
+        resp.hf.nl();
+
         for( auto attr : tinst()._attribs )
         {
-            resp << "<li>\n";
+            resp.hf.li_open();
+            resp.hf.nl();
             attr->getResponse(resp);
-            resp << "</li>\n";
+            resp.hf.li_close();
+            resp.hf.nl();
             if( resp.isInputFound() ) break;
         }
-        resp << "</ul>\n";
+        resp.hf.ul_close();
+        resp.hf.nl();
     }
 };
 
