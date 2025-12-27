@@ -31,6 +31,7 @@ public:
     template <typename... Args> void text(Args&&... args)
     { (_os << ... << forward<Args>(args)); }
     void nl() { _os << "\n"; }
+    void br() { _os << "<br>\n"; }
     void li_open() { _os << "<li>"; }
     void li_close() { _os << "</li>"; }
     void ul_open() { _os << "<ul>"; }
@@ -43,6 +44,18 @@ public:
     void select_close() { _os << "</select>"; }
     void option(string_view code, string_view s)
     { _os << "<option value=\"" << code << "\">" << s << "</option>"; }
+    void radio(string_view name, string_view code, string_view s)
+    {
+        _os << "<label>"
+            << "<input type=\"radio\" name=\""
+            << name
+            << "\" value=\""
+            << code
+            << "\"> "
+            << s
+            << "</label>";
+        br();
+    }
     HtmlFormatter(ostream& os) : _os(os) {}
 };
 
@@ -84,15 +97,33 @@ template <typename D, typename E> class Domain : public Settable
     void getInputWidget(Response& resp)
     {
         resp.hf.text(D::_descr,": ");
-        resp.hf.select_open(D::_name);
-        resp.hf.nl();
 
-        for (size_t i = 0; i < D::_domainsz; i++)
+        if constexpr (D::_choiceWidget == e_ChoiceWidget::DropDown)
         {
-            resp.hf.option(D::_codes[i], D::_vdescr[i]);
+            resp.hf.select_open(D::_name);
             resp.hf.nl();
+            for (size_t i = 0; i < D::_domainsz; i++)
+            {
+                resp.hf.option(D::_codes[i], D::_vdescr[i]);
+                resp.hf.nl();
+            }
+            resp.hf.select_close();
         }
-        resp.hf.select_close();
+        else if constexpr (D::_choiceWidget == e_ChoiceWidget::Radio)
+        {
+            resp.hf.br();
+            for (size_t i = 0; i < D::_domainsz; i++)
+                resp.hf.radio(D::_name, D::_codes[i], D::_vdescr[i]);
+        }
+        else if constexpr (D::_choiceWidget == e_ChoiceWidget::Button)
+        {
+            //for (size_t i = 0; i < D::_domainsz; i++)
+            //    resp.hf.button(
+            //        D::_name,
+            //        D::_codes[i],
+            //        D::_vdescr[i]
+            //    );
+        }
         resp.hf.nl();
     }
 public:
