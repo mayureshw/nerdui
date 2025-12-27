@@ -11,3 +11,5 @@ __settings__:
     /structures/*/attribs/*:
       card_min : 0
       card_max : 1
+    /domains/*:
+      choice_widget : DropDown
