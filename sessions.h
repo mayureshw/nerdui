@@ -19,7 +19,7 @@ constexpr char resp[] = R"(
 <form method="post" action="">
     {{{form}}}
     <input type="hidden" name="sessionid" value="{{sessionid}}">
-    <button type="submit">Submit</button>
+    <button type="submit">Next</button>
 </form>
 
 </body>
