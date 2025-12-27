@@ -81,6 +81,7 @@ class Response
     ostringstream _resp;
     bool _found_input = false;
     Settable *_settable = nullptr;
+    bool _have_button = false;
 public:
     HtmlFormatter hf {_resp};
     Settable* settable() { return _settable; }
@@ -89,12 +90,15 @@ public:
         _resp.str("");
         _resp.clear();
         _found_input = false;
+        _have_button = false;
     }
     void foundInput(Settable *settable)
     {
         _settable = settable;
         _found_input = true;
     }
+    void addedButton() { _have_button = true; }
+    bool haveButton() { return _have_button; }
     bool isInputFound() { return _found_input; }
     string str() { return _resp.str(); }
 };
@@ -129,6 +133,7 @@ template <typename D, typename E> class Domain : public Settable
         {
             for (size_t i = 0; i < D::_domainsz; i++)
                 resp.hf.button(D::_name, D::_codes[i], D::_vdescr[i]);
+            resp.addedButton();
         }
         resp.hf.nl();
     }
