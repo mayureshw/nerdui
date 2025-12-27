@@ -56,6 +56,16 @@ public:
             << "</label>";
         br();
     }
+    void button(string_view name, string_view code, string_view descr)
+    {
+        _os << "<button type=\"submit\" name=\""
+            << name
+            << "\" value=\""
+            << code
+            << "\">"
+            << descr
+            << "</button>";
+    }
     HtmlFormatter(ostream& os) : _os(os) {}
 };
 
@@ -117,12 +127,8 @@ template <typename D, typename E> class Domain : public Settable
         }
         else if constexpr (D::_choiceWidget == e_ChoiceWidget::Button)
         {
-            //for (size_t i = 0; i < D::_domainsz; i++)
-            //    resp.hf.button(
-            //        D::_name,
-            //        D::_codes[i],
-            //        D::_vdescr[i]
-            //    );
+            for (size_t i = 0; i < D::_domainsz; i++)
+                resp.hf.button(D::_name, D::_codes[i], D::_vdescr[i]);
         }
         resp.hf.nl();
     }
