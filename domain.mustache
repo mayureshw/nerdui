@@ -6,8 +6,8 @@ enum class e_{{key}} {
 
 class {{key}} : public Domain<{{key}},e_{{key}}>
 {
-    constexpr static inline e_ChoiceWidget _choiceWidget = e_ChoiceWidget::{{value.choice_widget}};
 public:
+    constexpr static inline e_ChoiceWidget _choiceWidget = e_ChoiceWidget::{{value.choice_widget}};
     using t_dom = e_{{key}};
     constexpr static char _name[] = "{{key}}";
     constexpr static char _descr[] = "{{value.descr}}";
