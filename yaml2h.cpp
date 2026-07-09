@@ -6,16 +6,18 @@
 #include <mustache.hpp>
 #include <ranges>
 #include <vector>
+#include <map>
 
 using mdata = kainjow::mustache::data;
 using kainjow::mustache::partial;
 using mustache = kainjow::mustache::mustache;
 using namespace std;
 
-constexpr string_view kwd_domains    = "domains";
-constexpr string_view kwd_unions     = "unions";
-constexpr string_view kwd_structures = "structures";
 constexpr string_view kwd_constants  = "constants";
+constexpr string_view kwd_types      = "types";
+constexpr string_view kwd_domains    = "domain";
+constexpr string_view kwd_unions     = "union";
+constexpr string_view kwd_structures = "structure";
 
 class Type
 {
@@ -39,6 +41,7 @@ class Structure : public Type
 
 class YamlSpec
 {
+    map<string,string> _constants;
     void check_file_exists(char *path)
     {
         if ( not filesystem::exists(path) )
@@ -72,14 +75,27 @@ class YamlSpec
             exit(1);
         }
     }
-    void process_domains(YAML::Node& node, char* path)
+    void process_domain(YAML::Node& node, char* path)
     {
     }
-    void process_unions(YAML::Node& node, char* path)
+    void process_union(YAML::Node& node, char* path)
     {
     }
-    void process_structures(YAML::Node& node, char* path)
+    void process_structure(YAML::Node& node, char* path)
     {
+    }
+    void process_types(YAML::Node& node, char* path)
+    {
+    }
+    void process_constant(string key, string value, char* path)
+    {
+        auto it = _constants.find(key);
+        if ( it == _constants.end() ) _constants.emplace(key,value);
+        else
+        {
+            cerr << "Duplicate constant found "
+                << path << " : " << key << endl;
+        }
     }
     void process_constants(YAML::Node& node, char* path)
     {
@@ -88,6 +104,9 @@ class YamlSpec
         {
             auto key = kv.first.as<string>();
             auto value = kv.second;
+            expectType<YAML::NodeType::Scalar>(value,path);
+            auto value_s = value.as<string>();
+            process_constant(key,value_s,path);
         }
     }
     void process_yaml(YAML::Node& node, char* path)
@@ -97,9 +116,7 @@ class YamlSpec
         {
             auto key = kv.first.as<string>();
             auto value = kv.second;
-            if ( key == kwd_domains ) process_domains(value,path);
-            else if ( key == kwd_unions ) process_unions(value,path);
-            else if ( key == kwd_structures ) process_structures(value,path);
+            if ( key == kwd_types ) process_types(value,path);
             else if ( key == kwd_constants ) process_constants(value,path);
             else
             {
