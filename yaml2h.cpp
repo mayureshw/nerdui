@@ -22,6 +22,7 @@ constexpr string_view kwd_kind           = "kind";
 constexpr string_view kwd_descr          = "descr";
 constexpr string_view kwd_values         = "values";
 constexpr string_view kwd_choice_widget  = "choice_widget";
+constexpr string_view kwd_selector_typ   = "selectorTyp";
 
 class YamlIf
 {
@@ -72,8 +73,9 @@ class Type : public YamlIf
 {
 protected:
     const string _name;
+    const string _descr;
 public:
-    Type(string name) : _name(name) {}
+    Type(string name, string descr) : _name(name), _descr(descr) {}
     virtual ~Type() {}
 };
 
@@ -82,7 +84,8 @@ class Domain : public Type
     map<string,string> _keyvals;
     string _choice_widget = "";
 public:
-    Domain(string name, YAML::Node& node, char* path) : Type(name)
+    Domain(string name, string descr, YAML::Node& node, char* path)
+    : Type(name,descr)
     {
         expectKey(node,kwd_values,path);
         auto kvals = node[kwd_values];
@@ -107,16 +110,23 @@ public:
 
 class Union : public Type
 {
+    string _selectorTyp;
 public:
-    Union(string name, YAML::Node& node, char* path) : Type(name)
+    Union(string name, string descr, YAML::Node& node, char* path)
+    : Type(name,descr)
     {
+        expectKey(node,kwd_selector_typ,path);
+        auto selectorTypNode = node[kwd_selector_typ];
+        expectType<YAML::NodeType::Scalar>(selectorTypNode,path);
+        _selectorTyp = selectorTypNode.as<string>();
     }
 };
 
 class Structure : public Type
 {
 public:
-    Structure(string name, YAML::Node& node, char* path) : Type(name)
+    Structure(string name, string descr, YAML::Node& node, char* path)
+    : Type(name,descr)
     {
     }
 };
@@ -137,12 +147,13 @@ class YamlSpec : public YamlIf
     {
         expectType<YAML::NodeType::Map> (node,path);
         expectKey(node,kwd_kind,path);
-        expectKey(node,kwd_descr,path);
         auto kind = node[kwd_kind].as<string>();
+        expectKey(node,kwd_descr,path);
+        auto descr = node[kwd_descr].as<string>();
         Type *typ;
-        if ( kind == kwd_domain ) typ = new Domain(name,node,path);
-        else if ( kind == kwd_union ) typ = new Union(name,node,path);
-        else if ( kind == kwd_structure ) typ = new Structure(name,node,path);
+        if ( kind == kwd_domain ) typ = new Domain(name,descr,node,path);
+        else if ( kind == kwd_union ) typ = new Union(name,descr,node,path);
+        else if ( kind == kwd_structure ) typ = new Structure(name,descr,node,path);
         else
         {
             cerr << "Unknown kind: '" << kind << "'";
