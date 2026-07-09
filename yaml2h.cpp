@@ -13,14 +13,15 @@ using kainjow::mustache::partial;
 using mustache = kainjow::mustache::mustache;
 using namespace std;
 
-constexpr string_view kwd_constants  = "constants";
-constexpr string_view kwd_types      = "types";
-constexpr string_view kwd_domain     = "domain";
-constexpr string_view kwd_union      = "union";
-constexpr string_view kwd_structure  = "structure";
-constexpr string_view kwd_kind       = "kind";
-constexpr string_view kwd_descr      = "descr";
-constexpr string_view kwd_values     = "values";
+constexpr string_view kwd_constants      = "constants";
+constexpr string_view kwd_types          = "types";
+constexpr string_view kwd_domain         = "domain";
+constexpr string_view kwd_union          = "union";
+constexpr string_view kwd_structure      = "structure";
+constexpr string_view kwd_kind           = "kind";
+constexpr string_view kwd_descr          = "descr";
+constexpr string_view kwd_values         = "values";
+constexpr string_view kwd_choice_widget  = "choice_widget";
 
 class YamlIf
 {
@@ -76,13 +77,10 @@ public:
     virtual ~Type() {}
 };
 
-class Constant
-{
-};
-
 class Domain : public Type
 {
     map<string,string> _keyvals;
+    string _choice_widget = "";
 public:
     Domain(string name, YAML::Node& node, char* path) : Type(name)
     {
@@ -101,6 +99,9 @@ public:
             auto val = kv.second.as<string>();
             _keyvals.emplace(key,val);
         }
+
+        auto choice_widget = node[kwd_choice_widget];
+        if ( choice_widget ) _choice_widget = choice_widget.as<string>();
     }
 };
 
