@@ -22,8 +22,58 @@ constexpr string_view kwd_kind       = "kind";
 constexpr string_view kwd_descr      = "descr";
 constexpr string_view kwd_values     = "values";
 
-class Type
+class YamlIf
 {
+public:
+    static constexpr const char* nodeTypeName(YAML::NodeType::value t)
+    {
+        switch (t) {
+        case YAML::NodeType::Map:      return "map";
+        case YAML::NodeType::Sequence: return "sequence";
+        case YAML::NodeType::Scalar:   return "scalar";
+        case YAML::NodeType::Null:     return "null";
+        case YAML::NodeType::Undefined:return "undefined";
+        }
+        return "unknown";
+    }
+    static void print_err_loc(const YAML::Node& node, char* path)
+    {
+        cerr << " " << path << ":";
+        auto mark = node.Mark();
+        if ( mark.is_null() ) cerr << "unknown";
+        else cerr << mark.line + 1 << ":" << mark.column + 1;
+        cerr << endl;
+    }
+    template <YAML::NodeType::value Expected>
+    static void expectType(const YAML::Node& node,char* path)
+    {
+        if (node.Type() != Expected)
+        {
+            cerr << "Expected yaml object of type: " << nodeTypeName(Expected);
+            print_err_loc(node,path);
+            exit(1);
+        }
+    }
+    static void expectKey(const YAML::Node& node,string_view key,char* path)
+    {
+        // Assumption: Caller does expectType
+        if ( not node[key] )
+        {
+            auto mark = node.Mark();
+            cerr << "Key '" << key << "' missing in map";
+            print_err_loc(node,path);
+            exit(1);
+        }
+    }
+};
+
+class Type : public YamlIf
+{
+protected:
+    const string _name;
+public:
+    Type(string name) : _name(name) {}
+    virtual ~Type() {}
 };
 
 class Constant
@@ -32,17 +82,45 @@ class Constant
 
 class Domain : public Type
 {
+    map<string,string> _keyvals;
+public:
+    Domain(string name, YAML::Node& node, char* path) : Type(name)
+    {
+        expectKey(node,kwd_values,path);
+        auto kvals = node[kwd_values];
+        for (const auto& kv : kvals)
+        {
+            auto key = kv.first.as<string>();
+            if ( _keyvals.find(key) != _keyvals.end() )
+            {
+                cerr << "Duplicate key found " << "'" << key << "'";
+                print_err_loc(node,path);
+                exit(1);
+            }
+            expectType<YAML::NodeType::Scalar>(kv.second,path);
+            auto val = kv.second.as<string>();
+            _keyvals.emplace(key,val);
+        }
+    }
 };
 
 class Union : public Type
 {
+public:
+    Union(string name, YAML::Node& node, char* path) : Type(name)
+    {
+    }
 };
 
 class Structure : public Type
 {
+public:
+    Structure(string name, YAML::Node& node, char* path) : Type(name)
+    {
+    }
 };
 
-class YamlSpec
+class YamlSpec : public YamlIf
 {
     map<string,string> _constants;
     map<string,Type*> _types;
@@ -54,74 +132,23 @@ class YamlSpec
             exit(1);
         }
     }
-    constexpr const char* nodeTypeName(YAML::NodeType::value t)
-    {
-        switch (t) {
-        case YAML::NodeType::Map:      return "map";
-        case YAML::NodeType::Sequence: return "sequence";
-        case YAML::NodeType::Scalar:   return "scalar";
-        case YAML::NodeType::Null:     return "null";
-        case YAML::NodeType::Undefined:return "undefined";
-        }
-        return "unknown";
-    }
-    void print_err_loc(const YAML::Node& node, char* path)
-    {
-        cerr << " " << path << ":";
-        auto mark = node.Mark();
-        if ( mark.is_null() ) cerr << "unknown";
-        else cerr << mark.line + 1 << ":" << mark.column + 1;
-        cerr << endl;
-    }
-    template <YAML::NodeType::value Expected>
-    void expectType(const YAML::Node& node,char* path)
-    {
-        if (node.Type() != Expected)
-        {
-            cerr << "Expected yaml object of type: " << nodeTypeName(Expected);
-            print_err_loc(node,path);
-            exit(1);
-        }
-    }
-    void expectKey(const YAML::Node& node,string_view key,char* path)
-    {
-        // Assumption: Caller does expectType
-        if ( not node[key] )
-        {
-            auto mark = node.Mark();
-            cerr << "Key '" << key << "' missing in map";
-            print_err_loc(node,path);
-            exit(1);
-        }
-    }
-    void process_domain(string name, YAML::Node& node, char* path)
-    {
-        expectKey(node,kwd_values,path);
-        _types.emplace(name,nullptr);
-    }
-    void process_union(string name, YAML::Node& node, char* path)
-    {
-        _types.emplace(name,nullptr);
-    }
-    void process_structure(string name, YAML::Node& node, char* path)
-    {
-        _types.emplace(name,nullptr);
-    }
     void process_type(string name, YAML::Node& node, char* path)
     {
         expectType<YAML::NodeType::Map> (node,path);
         expectKey(node,kwd_kind,path);
         expectKey(node,kwd_descr,path);
         auto kind = node[kwd_kind].as<string>();
-        if ( kind == kwd_domain ) process_domain(name,node,path);
-        else if ( kind == kwd_union ) process_union(name,node,path);
-        else if ( kind == kwd_structure ) process_structure(name,node,path);
+        Type *typ;
+        if ( kind == kwd_domain ) typ = new Domain(name,node,path);
+        else if ( kind == kwd_union ) typ = new Union(name,node,path);
+        else if ( kind == kwd_structure ) typ = new Structure(name,node,path);
         else
         {
-            cerr << "Unknown kind: " << kind << " in "
-                << path << ":" << name << endl;
+            cerr << "Unknown kind: '" << kind << "'";
+            print_err_loc(node,path);
             exit(1);
         }
+        _types.emplace(name,typ);
     }
     void process_types(YAML::Node& node, char* path)
     {
@@ -131,7 +158,8 @@ class YamlSpec
             auto key = kv.first.as<string>();
             if ( _types.find(key) != _types.end() )
             {
-                cerr << "Duplicate type found " << path << ":" << key << endl;
+                cerr << "Duplicate type found : '" << key << "'";
+                print_err_loc(node,path);
                 exit(1);
             }
             auto value = kv.second;
@@ -144,7 +172,7 @@ class YamlSpec
         if ( it == _constants.end() ) _constants.emplace(key,value);
         else
         {
-            cerr << "Duplicate constant found "
+            cerr << "Duplicate constant found '" << key << "'"
                 << path << " : " << key << endl;
             exit(1);
         }
@@ -172,13 +200,13 @@ class YamlSpec
             else if ( key == kwd_constants ) process_constants(value,path);
             else
             {
-                cerr << "Unknown key: " << path << ": " << key << endl;
+                cerr << "Unknown key: '" << key << "'";
+                print_err_loc(node,path);
                 exit(1);
             }
        }
     }
 public:
-
     void parse_yaml(char* path)
     {
         try {
@@ -189,6 +217,10 @@ public:
             cerr << path << ": " << e.what() << endl;
             exit(1);
         }
+    }
+    ~YamlSpec()
+    {
+        for(auto it:_types) delete it.second;
     }
 };
 
