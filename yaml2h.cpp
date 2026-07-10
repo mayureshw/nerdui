@@ -11,7 +11,15 @@
 using mdata = kainjow::mustache::data;
 using kainjow::mustache::partial;
 using mustache = kainjow::mustache::mustache;
+using Y_Node = YAML::Node;
+using Y_value = YAML::NodeType::value;
 using namespace std;
+
+constexpr auto Y_Map       = YAML::NodeType::Map;
+constexpr auto Y_Sequence  = YAML::NodeType::Sequence;
+constexpr auto Y_Scalar    = YAML::NodeType::Scalar;
+constexpr auto Y_Null      = YAML::NodeType::Null;
+constexpr auto Y_Undefined = YAML::NodeType::Undefined;
 
 constexpr string_view kwd_constants      = "constants";
 constexpr string_view kwd_types          = "types";
@@ -28,18 +36,18 @@ class YamlIf
 {
 public:
     static inline char* _curpath;
-    static constexpr const char* nodeTypeName(YAML::NodeType::value t)
+    static constexpr const char* nodeTypeName(Y_value t)
     {
         switch (t) {
-        case YAML::NodeType::Map:      return "map";
-        case YAML::NodeType::Sequence: return "sequence";
-        case YAML::NodeType::Scalar:   return "scalar";
-        case YAML::NodeType::Null:     return "null";
-        case YAML::NodeType::Undefined:return "undefined";
+        case Y_Map:      return "map";
+        case Y_Sequence: return "sequence";
+        case Y_Scalar:   return "scalar";
+        case Y_Null:     return "null";
+        case Y_Undefined:return "undefined";
         }
         return "unknown";
     }
-    static void print_err_loc(const YAML::Node& node)
+    static void print_err_loc(const Y_Node& node)
     {
         cerr << " " << _curpath << ":";
         auto mark = node.Mark();
@@ -47,8 +55,8 @@ public:
         else cerr << mark.line + 1 << ":" << mark.column + 1;
         cerr << endl;
     }
-    template <YAML::NodeType::value Expected>
-    static void expectType(const YAML::Node& node)
+    template <Y_value Expected>
+    static void expectType(const Y_Node& node)
     {
         if (node.Type() != Expected)
         {
@@ -57,7 +65,7 @@ public:
             exit(1);
         }
     }
-    static void expectKey(const YAML::Node& node,string_view key)
+    static void expectKey(const Y_Node& node,string_view key)
     {
         // Assumption: Caller does expectType
         if ( not node[key] )
@@ -85,7 +93,7 @@ class Domain : public Type
     map<string,string> _keyvals;
     string _choice_widget = "";
 public:
-    Domain(string name, string descr, YAML::Node& node)
+    Domain(string name, string descr, Y_Node& node)
     : Type(name,descr)
     {
         expectKey(node,kwd_values);
@@ -99,7 +107,7 @@ public:
                 print_err_loc(node);
                 exit(1);
             }
-            expectType<YAML::NodeType::Scalar>(kv.second);
+            expectType<Y_Scalar>(kv.second);
             auto val = kv.second.as<string>();
             _keyvals.emplace(key,val);
         }
@@ -113,12 +121,12 @@ class Union : public Type
 {
     string _selectorTyp;
 public:
-    Union(string name, string descr, YAML::Node& node)
+    Union(string name, string descr, Y_Node& node)
     : Type(name,descr)
     {
         expectKey(node,kwd_selector_typ);
         auto selectorTypNode = node[kwd_selector_typ];
-        expectType<YAML::NodeType::Scalar>(selectorTypNode);
+        expectType<Y_Scalar>(selectorTypNode);
         _selectorTyp = selectorTypNode.as<string>();
     }
 };
@@ -126,7 +134,7 @@ public:
 class Structure : public Type
 {
 public:
-    Structure(string name, string descr, YAML::Node& node)
+    Structure(string name, string descr, Y_Node& node)
     : Type(name,descr)
     {
     }
@@ -147,9 +155,9 @@ class YamlSpec : public YamlIf
     void handle_map_with_known_keys()
     {
     }
-    void parse_type(string name, YAML::Node& node)
+    void parse_type(string name, Y_Node& node)
     {
-        expectType<YAML::NodeType::Map> (node);
+        expectType<Y_Map> (node);
         expectKey(node,kwd_kind);
         auto kind = node[kwd_kind].as<string>();
         expectKey(node,kwd_descr);
@@ -166,9 +174,9 @@ class YamlSpec : public YamlIf
         }
         _types.emplace(name,typ);
     }
-    void parse_types(YAML::Node& node)
+    void parse_types(Y_Node& node)
     {
-        expectType<YAML::NodeType::Map> (node);
+        expectType<Y_Map> (node);
         for (const auto& kv : node)
         {
             auto key = kv.first.as<string>();
@@ -193,21 +201,21 @@ class YamlSpec : public YamlIf
             exit(1);
         }
     }
-    void parse_constants(YAML::Node& node)
+    void parse_constants(Y_Node& node)
     {
-        expectType<YAML::NodeType::Map> (node);
+        expectType<Y_Map> (node);
         for (const auto& kv : node)
         {
             auto key = kv.first.as<string>();
             auto value = kv.second;
-            expectType<YAML::NodeType::Scalar>(value);
+            expectType<Y_Scalar>(value);
             auto value_s = value.as<string>();
             parse_constant(key,value_s);
         }
     }
-    void parse_top(YAML::Node& node)
+    void parse_top(Y_Node& node)
     {
-        expectType<YAML::NodeType::Map> (node);
+        expectType<Y_Map> (node);
         for (const auto& kv : node)
         {
             auto key = kv.first.as<string>();
