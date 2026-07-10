@@ -84,6 +84,11 @@ public:
             exit(1);
         }
     }
+    string get_string(const Y_Node& node)
+    {
+        expectType<Y_Scalar>(node);
+        return node.as<string>();
+    }
     static void handle_static_map(const Y_Node& node, HandlerMap& hmap,
         const KeySet& mandatory_keys = emptyKeySet )
     {
@@ -137,10 +142,9 @@ public:
 class Type : public YamlIf
 {
 protected:
-    const string _name;
     const string _descr;
 public:
-    Type(string name, string descr) : _name(name), _descr(descr) {}
+    Type(string descr) : _descr(descr) {}
     virtual ~Type() {}
 };
 
@@ -149,24 +153,13 @@ class Domain : public Type
     map<string,string> _keyvals;
     string _choice_widget = "";
 public:
-    Domain(string name, string descr, const Y_Node& node)
-    : Type(name,descr)
+    Domain(string descr, const Y_Node& node) : Type(descr)
     {
         expectKey(node,kwd_values);
-        auto kvals = node[kwd_values];
-        for (const auto& kv : kvals)
-        {
-            auto key = kv.first.as<string>();
-            if ( _keyvals.find(key) != _keyvals.end() )
-            {
-                cerr << "Duplicate key found " << "'" << key << "'";
-                print_err_loc(node);
-                exit(1);
-            }
-            expectType<Y_Scalar>(kv.second);
-            auto val = kv.second.as<string>();
-            _keyvals.emplace(key,val);
-        }
+        auto values = node[kwd_values];
+        handle_dynamic_map<string>(values, _keyvals,
+            [this](const Y_Node& n){ return get_string(n); }
+            );
 
         auto choice_widget = node[kwd_choice_widget];
         if ( choice_widget ) _choice_widget = choice_widget.as<string>();
@@ -177,8 +170,7 @@ class Union : public Type
 {
     string _selectorTyp;
 public:
-    Union(string name, string descr, const Y_Node& node)
-    : Type(name,descr)
+    Union(string descr, const Y_Node& node) : Type(descr)
     {
         expectKey(node,kwd_selector_typ);
         auto selectorTypNode = node[kwd_selector_typ];
@@ -190,8 +182,7 @@ public:
 class Structure : public Type
 {
 public:
-    Structure(string name, string descr, const Y_Node& node)
-    : Type(name,descr)
+    Structure(string descr, const Y_Node& node) : Type(descr)
     {
     }
 };
@@ -209,45 +200,30 @@ class YamlSpec : public YamlIf
             exit(1);
         }
     }
-    void parse_type(string name, const Y_Node& node)
+    Type* get_type(const Y_Node& node)
     {
-        expectType<Y_Map> (node);
+        expectType<Y_Map>(node);
         expectKey(node,kwd_kind);
         auto kind = node[kwd_kind].as<string>();
         expectKey(node,kwd_descr);
         auto descr = node[kwd_descr].as<string>();
         Type *typ;
-        if ( kind == kwd_domain ) typ = new Domain(name,descr,node);
-        else if ( kind == kwd_union ) typ = new Union(name,descr,node);
-        else if ( kind == kwd_structure ) typ = new Structure(name,descr,node);
+        if ( kind == kwd_domain ) typ = new Domain(descr,node);
+        else if ( kind == kwd_union ) typ = new Union(descr,node);
+        else if ( kind == kwd_structure ) typ = new Structure(descr,node);
         else
         {
             cerr << "Unknown kind: '" << kind << "'";
             print_err_loc(node);
             exit(1);
         }
-        _types.emplace(name,typ);
+        return typ;
     }
     void parse_types(const Y_Node& node)
     {
-        expectType<Y_Map> (node);
-        for (const auto& kv : node)
-        {
-            auto key = kv.first.as<string>();
-            if ( _types.find(key) != _types.end() )
-            {
-                cerr << "Duplicate type found : '" << key << "'";
-                print_err_loc(node);
-                exit(1);
-            }
-            auto value = kv.second;
-            parse_type(key,value);
-        }
-    }
-    string get_string(const Y_Node& node)
-    {
-        expectType<Y_Scalar>(node);
-        return node.as<string>();
+        handle_dynamic_map<Type*>(node, _types,
+            [this](const Y_Node& n){ return get_type(n); }
+            );
     }
     void parse_constants(const Y_Node& node)
     {
