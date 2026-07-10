@@ -7,13 +7,17 @@
 #include <ranges>
 #include <vector>
 #include <map>
+#include <set>
 
+using namespace std;
 using mdata = kainjow::mustache::data;
 using kainjow::mustache::partial;
 using mustache = kainjow::mustache::mustache;
 using Y_Node = YAML::Node;
 using Y_value = YAML::NodeType::value;
-using namespace std;
+using Handler = std::function<void(const Y_Node&)>;
+using HandlerMap = unordered_map<string_view,Handler>;
+using KeySet = set<string_view>;
 
 constexpr auto Y_Map       = YAML::NodeType::Map;
 constexpr auto Y_Sequence  = YAML::NodeType::Sequence;
@@ -76,6 +80,35 @@ public:
             exit(1);
         }
     }
+    static void handle_static_map(const Y_Node& node,
+        KeySet& mandatory_keys, HandlerMap& hmap)
+    {
+        expectType<Y_Map>(node);
+
+        for(const auto& k : mandatory_keys)
+        {
+            if ( not node[k] )
+            {
+                cerr << "Mandatory key not found in map '" << k << "'"; 
+                print_err_loc(node);
+                exit(1);
+            }
+        }
+
+        for (const auto& kv : node)
+        {
+            auto key = kv.first.as<string>();
+            auto& value = kv.second;
+            auto it = hmap.find(key);
+            if ( it != hmap.end() ) it->second(value);
+            else
+            {
+                cerr << "Unknown key: '" << key << "'";
+                print_err_loc(node);
+                exit(1);
+            }
+       }
+    }
 };
 
 class Type : public YamlIf
@@ -93,7 +126,7 @@ class Domain : public Type
     map<string,string> _keyvals;
     string _choice_widget = "";
 public:
-    Domain(string name, string descr, Y_Node& node)
+    Domain(string name, string descr, const Y_Node& node)
     : Type(name,descr)
     {
         expectKey(node,kwd_values);
@@ -121,7 +154,7 @@ class Union : public Type
 {
     string _selectorTyp;
 public:
-    Union(string name, string descr, Y_Node& node)
+    Union(string name, string descr, const Y_Node& node)
     : Type(name,descr)
     {
         expectKey(node,kwd_selector_typ);
@@ -134,12 +167,13 @@ public:
 class Structure : public Type
 {
 public:
-    Structure(string name, string descr, Y_Node& node)
+    Structure(string name, string descr, const Y_Node& node)
     : Type(name,descr)
     {
     }
 };
 
+#define PARSE(NT) [this](const Y_Node& n){ parse_##NT(n); }
 class YamlSpec : public YamlIf
 {
     map<string,string> _constants;
@@ -152,10 +186,7 @@ class YamlSpec : public YamlIf
             exit(1);
         }
     }
-    void handle_map_with_known_keys()
-    {
-    }
-    void parse_type(string name, Y_Node& node)
+    void parse_type(string name, const Y_Node& node)
     {
         expectType<Y_Map> (node);
         expectKey(node,kwd_kind);
@@ -174,7 +205,7 @@ class YamlSpec : public YamlIf
         }
         _types.emplace(name,typ);
     }
-    void parse_types(Y_Node& node)
+    void parse_types(const Y_Node& node)
     {
         expectType<Y_Map> (node);
         for (const auto& kv : node)
@@ -201,7 +232,7 @@ class YamlSpec : public YamlIf
             exit(1);
         }
     }
-    void parse_constants(Y_Node& node)
+    void parse_constants(const Y_Node& node)
     {
         expectType<Y_Map> (node);
         for (const auto& kv : node)
@@ -213,22 +244,14 @@ class YamlSpec : public YamlIf
             parse_constant(key,value_s);
         }
     }
-    void parse_top(Y_Node& node)
+    void parse_top(const Y_Node& node)
     {
-        expectType<Y_Map> (node);
-        for (const auto& kv : node)
-        {
-            auto key = kv.first.as<string>();
-            auto value = kv.second;
-            if ( key == kwd_types ) parse_types(value);
-            else if ( key == kwd_constants ) parse_constants(value);
-            else
+        HandlerMap hmap
             {
-                cerr << "Unknown key: '" << key << "'";
-                print_err_loc(node);
-                exit(1);
-            }
-       }
+                { kwd_types, PARSE(types) },
+                { kwd_constants, PARSE(constants) },
+            };
+        handle_static_map(node, { kwd_types }, hmap);
     }
 public:
     void parse_yaml(char* path)
