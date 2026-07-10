@@ -27,6 +27,7 @@ constexpr string_view kwd_selector_typ   = "selectorTyp";
 class YamlIf
 {
 public:
+    static inline char* _curpath;
     static constexpr const char* nodeTypeName(YAML::NodeType::value t)
     {
         switch (t) {
@@ -38,32 +39,32 @@ public:
         }
         return "unknown";
     }
-    static void print_err_loc(const YAML::Node& node, char* path)
+    static void print_err_loc(const YAML::Node& node)
     {
-        cerr << " " << path << ":";
+        cerr << " " << _curpath << ":";
         auto mark = node.Mark();
         if ( mark.is_null() ) cerr << "unknown";
         else cerr << mark.line + 1 << ":" << mark.column + 1;
         cerr << endl;
     }
     template <YAML::NodeType::value Expected>
-    static void expectType(const YAML::Node& node,char* path)
+    static void expectType(const YAML::Node& node)
     {
         if (node.Type() != Expected)
         {
             cerr << "Expected yaml object of type: " << nodeTypeName(Expected);
-            print_err_loc(node,path);
+            print_err_loc(node);
             exit(1);
         }
     }
-    static void expectKey(const YAML::Node& node,string_view key,char* path)
+    static void expectKey(const YAML::Node& node,string_view key)
     {
         // Assumption: Caller does expectType
         if ( not node[key] )
         {
             auto mark = node.Mark();
             cerr << "Key '" << key << "' missing in map";
-            print_err_loc(node,path);
+            print_err_loc(node);
             exit(1);
         }
     }
@@ -84,10 +85,10 @@ class Domain : public Type
     map<string,string> _keyvals;
     string _choice_widget = "";
 public:
-    Domain(string name, string descr, YAML::Node& node, char* path)
+    Domain(string name, string descr, YAML::Node& node)
     : Type(name,descr)
     {
-        expectKey(node,kwd_values,path);
+        expectKey(node,kwd_values);
         auto kvals = node[kwd_values];
         for (const auto& kv : kvals)
         {
@@ -95,10 +96,10 @@ public:
             if ( _keyvals.find(key) != _keyvals.end() )
             {
                 cerr << "Duplicate key found " << "'" << key << "'";
-                print_err_loc(node,path);
+                print_err_loc(node);
                 exit(1);
             }
-            expectType<YAML::NodeType::Scalar>(kv.second,path);
+            expectType<YAML::NodeType::Scalar>(kv.second);
             auto val = kv.second.as<string>();
             _keyvals.emplace(key,val);
         }
@@ -112,12 +113,12 @@ class Union : public Type
 {
     string _selectorTyp;
 public:
-    Union(string name, string descr, YAML::Node& node, char* path)
+    Union(string name, string descr, YAML::Node& node)
     : Type(name,descr)
     {
-        expectKey(node,kwd_selector_typ,path);
+        expectKey(node,kwd_selector_typ);
         auto selectorTypNode = node[kwd_selector_typ];
-        expectType<YAML::NodeType::Scalar>(selectorTypNode,path);
+        expectType<YAML::NodeType::Scalar>(selectorTypNode);
         _selectorTyp = selectorTypNode.as<string>();
     }
 };
@@ -125,7 +126,7 @@ public:
 class Structure : public Type
 {
 public:
-    Structure(string name, string descr, YAML::Node& node, char* path)
+    Structure(string name, string descr, YAML::Node& node)
     : Type(name,descr)
     {
     }
@@ -143,77 +144,80 @@ class YamlSpec : public YamlIf
             exit(1);
         }
     }
-    void process_type(string name, YAML::Node& node, char* path)
+    void handle_map_with_known_keys()
     {
-        expectType<YAML::NodeType::Map> (node,path);
-        expectKey(node,kwd_kind,path);
+    }
+    void parse_type(string name, YAML::Node& node)
+    {
+        expectType<YAML::NodeType::Map> (node);
+        expectKey(node,kwd_kind);
         auto kind = node[kwd_kind].as<string>();
-        expectKey(node,kwd_descr,path);
+        expectKey(node,kwd_descr);
         auto descr = node[kwd_descr].as<string>();
         Type *typ;
-        if ( kind == kwd_domain ) typ = new Domain(name,descr,node,path);
-        else if ( kind == kwd_union ) typ = new Union(name,descr,node,path);
-        else if ( kind == kwd_structure ) typ = new Structure(name,descr,node,path);
+        if ( kind == kwd_domain ) typ = new Domain(name,descr,node);
+        else if ( kind == kwd_union ) typ = new Union(name,descr,node);
+        else if ( kind == kwd_structure ) typ = new Structure(name,descr,node);
         else
         {
             cerr << "Unknown kind: '" << kind << "'";
-            print_err_loc(node,path);
+            print_err_loc(node);
             exit(1);
         }
         _types.emplace(name,typ);
     }
-    void process_types(YAML::Node& node, char* path)
+    void parse_types(YAML::Node& node)
     {
-        expectType<YAML::NodeType::Map> (node,path);
+        expectType<YAML::NodeType::Map> (node);
         for (const auto& kv : node)
         {
             auto key = kv.first.as<string>();
             if ( _types.find(key) != _types.end() )
             {
                 cerr << "Duplicate type found : '" << key << "'";
-                print_err_loc(node,path);
+                print_err_loc(node);
                 exit(1);
             }
             auto value = kv.second;
-            process_type(key,value,path);
+            parse_type(key,value);
         }
     }
-    void process_constant(string key, string value, char* path)
+    void parse_constant(string key, string value)
     {
         auto it = _constants.find(key);
         if ( it == _constants.end() ) _constants.emplace(key,value);
         else
         {
             cerr << "Duplicate constant found '" << key << "'"
-                << path << " : " << key << endl;
+                << _curpath << " : " << key << endl;
             exit(1);
         }
     }
-    void process_constants(YAML::Node& node, char* path)
+    void parse_constants(YAML::Node& node)
     {
-        expectType<YAML::NodeType::Map> (node,path);
+        expectType<YAML::NodeType::Map> (node);
         for (const auto& kv : node)
         {
             auto key = kv.first.as<string>();
             auto value = kv.second;
-            expectType<YAML::NodeType::Scalar>(value,path);
+            expectType<YAML::NodeType::Scalar>(value);
             auto value_s = value.as<string>();
-            process_constant(key,value_s,path);
+            parse_constant(key,value_s);
         }
     }
-    void process_yaml(YAML::Node& node, char* path)
+    void parse_top(YAML::Node& node)
     {
-        expectType<YAML::NodeType::Map> (node,path);
+        expectType<YAML::NodeType::Map> (node);
         for (const auto& kv : node)
         {
             auto key = kv.first.as<string>();
             auto value = kv.second;
-            if ( key == kwd_types ) process_types(value,path);
-            else if ( key == kwd_constants ) process_constants(value,path);
+            if ( key == kwd_types ) parse_types(value);
+            else if ( key == kwd_constants ) parse_constants(value);
             else
             {
                 cerr << "Unknown key: '" << key << "'";
-                print_err_loc(node,path);
+                print_err_loc(node);
                 exit(1);
             }
        }
@@ -222,8 +226,9 @@ public:
     void parse_yaml(char* path)
     {
         try {
-            auto yaml = YAML::LoadFile(path);
-            process_yaml(yaml,path);
+            auto node = YAML::LoadFile(path);
+            _curpath = path;
+            parse_top(node);
         }
         catch ( exception& e ) {
             cerr << path << ": " << e.what() << endl;
