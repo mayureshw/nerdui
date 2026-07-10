@@ -15,8 +15,10 @@ using kainjow::mustache::partial;
 using mustache = kainjow::mustache::mustache;
 using Y_Node = YAML::Node;
 using Y_value = YAML::NodeType::value;
-using Handler = std::function<void(const Y_Node&)>;
-using HandlerMap = unordered_map<string_view,Handler>;
+using NodeHandler = function<void(const Y_Node&)>;
+template<typename ValTyp>
+using ValueHandler = function<ValTyp(const Y_Node&)>;
+using HandlerMap = unordered_map<string_view,NodeHandler>;
 using KeySet = set<string_view>;
 
 constexpr auto Y_Map       = YAML::NodeType::Map;
@@ -110,6 +112,25 @@ public:
                 exit(1);
             }
        }
+    }
+    template<typename ValTyp>
+    static void handle_dynamic_map(const Y_Node& node,
+        map<string,ValTyp>& tgtmap, ValueHandler<ValTyp> vhandler)
+    {
+        expectType<Y_Map>(node);
+        for (const auto& kv : node)
+        {
+            auto key = kv.first.as<string>();
+            if ( tgtmap.find(key) != tgtmap.end() )
+            {
+                cerr << "Duplicate key '" << key << "'";
+                print_err_loc(node);
+                exit(1);
+            }
+            auto& value = kv.second;
+            auto tgtvalue = vhandler(value);
+            tgtmap.emplace(key,tgtvalue);
+        }
     }
 };
 
@@ -223,28 +244,16 @@ class YamlSpec : public YamlIf
             parse_type(key,value);
         }
     }
-    void parse_constant(string key, string value)
+    string get_string(const Y_Node& node)
     {
-        auto it = _constants.find(key);
-        if ( it == _constants.end() ) _constants.emplace(key,value);
-        else
-        {
-            cerr << "Duplicate constant found '" << key << "'"
-                << _curpath << " : " << key << endl;
-            exit(1);
-        }
+        expectType<Y_Scalar>(node);
+        return node.as<string>();
     }
     void parse_constants(const Y_Node& node)
     {
-        expectType<Y_Map> (node);
-        for (const auto& kv : node)
-        {
-            auto key = kv.first.as<string>();
-            auto value = kv.second;
-            expectType<Y_Scalar>(value);
-            auto value_s = value.as<string>();
-            parse_constant(key,value_s);
-        }
+        handle_dynamic_map<string>(node, _constants,
+            [this](const Y_Node& n){ return get_string(n); }
+            );
     }
     void parse_top(const Y_Node& node)
     {
