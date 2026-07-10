@@ -36,6 +36,8 @@ constexpr string_view kwd_values         = "values";
 constexpr string_view kwd_choice_widget  = "choice_widget";
 constexpr string_view kwd_selector_typ   = "selectorTyp";
 
+const KeySet emptyKeySet {};
+
 class YamlIf
 {
 public:
@@ -80,8 +82,8 @@ public:
             exit(1);
         }
     }
-    static void handle_static_map(const Y_Node& node,
-        KeySet& mandatory_keys, HandlerMap& hmap)
+    static void handle_static_map(const Y_Node& node, HandlerMap& hmap,
+        const KeySet& mandatory_keys = emptyKeySet )
     {
         expectType<Y_Map>(node);
 
@@ -251,7 +253,7 @@ class YamlSpec : public YamlIf
                 { kwd_types, PARSE(types) },
                 { kwd_constants, PARSE(constants) },
             };
-        handle_static_map(node, { kwd_types }, hmap);
+        handle_static_map(node, hmap);
     }
 public:
     void parse_yaml(char* path)
