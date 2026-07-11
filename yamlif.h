@@ -35,6 +35,7 @@ constexpr string_view kwd_Button         = "Button";
 constexpr string_view kwd_attribs        = "attribs";
 constexpr string_view kwd_type           = "type";
 constexpr string_view kwd_selector       = "selector";
+constexpr string_view kwd_cases          = "cases";
 
 const KeySet emptyKeySet {};
 const KeySet dom_choice_widget { kwd_DropDown, kwd_Radio, kwd_Button };
@@ -58,14 +59,16 @@ public:
             exit(1);
         }
     }
-    static void check_type_exists(const Y_Node& node, string type)
+    static Type* check_type_exists(const Y_Node& node, string type)
     {
-        if ( _types.find(type) == _types.end() )
+        auto it = _types.find(type);
+        if ( it == _types.end() )
         {
             cerr << "Type used before definition " << type;
             print_err_loc(node);
             exit(1);
         }
+        return it->second;
     }
     static constexpr const char* nodeTypeName(Y_value t)
     {

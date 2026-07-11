@@ -13,6 +13,7 @@ protected:
     }
     void parse_kind(const Y_Node& node) {}
 public:
+    virtual bool is_union() { return false; }
     virtual ~Type() {}
 };
 
@@ -46,13 +47,30 @@ public:
 class Union : public Type
 {
     string _selectorTyp;
+    bool _selector_is_union;
+    void parse_selector_typ(const Y_Node& node)
+    {
+        _selectorTyp = parse_dynamic_string(node);
+        auto typ = check_type_exists(node,_selectorTyp);
+        _selector_is_union = typ->is_union() ;
+    }
+    void parse_cases(const Y_Node& node)
+    {
+        //handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
+    }
 public:
+    bool is_union() { return true; }
     Union(const Y_Node& node)
     {
-        // expectKey(node,kwd_selector_typ);
-        // auto selectorTypNode = node[kwd_selector_typ];
-        // expectType<Y_Scalar>(selectorTypNode);
-        // _selectorTyp = selectorTypNode.as<string>();
+        HandlerMap<void> hmap
+            {
+                { kwd_descr, PARSE(descr) },
+                { kwd_kind, PARSE(kind) },
+                { kwd_selector_typ, PARSE(selector_typ) },
+                { kwd_cases, PARSE(cases) },
+            };
+        KeySet mandatory { kwd_descr, kwd_selector_typ, kwd_cases };
+        handle_static_map(node, hmap, mandatory);
     }
 };
 
