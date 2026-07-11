@@ -73,7 +73,8 @@ class Union : public Type
     }
     void parse_cases(const Y_Node& node)
     {
-        handle_dynamic_map<UnionCases*>(node, _typ_cases, CREATE(UnionCases));
+        handle_dynamic_map<UnionCases*>(node, _typ_cases,
+            CREATE(UnionCases), check_type_exists);
     }
 public:
     bool is_union() { return true; }

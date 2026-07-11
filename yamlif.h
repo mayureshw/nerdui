@@ -162,16 +162,21 @@ public:
        }
     }
 
+    static void dummyHandler(const Y_Node&,string) {}
+
     // dynamic map handle expects a uniform return type for all children
     // and builds the return values into a tgtmap against a key
     template<typename ValTyp>
     static void handle_dynamic_map(const Y_Node& node,
-        map<string,ValTyp>& tgtmap, NodeHandler<ValTyp> vhandler)
+        map<string,ValTyp>& tgtmap, NodeHandler<ValTyp> vhandler,
+        function<void(const Y_Node&,string)> khandler = dummyHandler)
     {
         expectType<Y_Map>(node);
         for (const auto& kv : node)
         {
-            auto key = kv.first.as<string>();
+            auto key_node = kv.first;
+            auto key = key_node.as<string>();
+            khandler(key_node,key);
             if ( tgtmap.find(key) != tgtmap.end() )
             {
                 cerr << "Duplicate key '" << key << "'";
