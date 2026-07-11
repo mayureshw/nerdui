@@ -29,8 +29,12 @@ constexpr string_view kwd_descr          = "descr";
 constexpr string_view kwd_values         = "values";
 constexpr string_view kwd_choice_widget  = "choice_widget";
 constexpr string_view kwd_selector_typ   = "selectorTyp";
+constexpr string_view kwd_DropDown       = "DropDown";
+constexpr string_view kwd_Radio          = "Radio";
+constexpr string_view kwd_Button         = "Button";
 
 const KeySet emptyKeySet {};
+const KeySet dom_choice_widget { kwd_DropDown, kwd_Radio, kwd_Button };
 
 #define PARSE(NT,...) [this](const Y_Node& n){ return parse_##NT(n __VA_OPT__(,) __VA_ARGS__); }
 #define CREATE(TYP) [](const Y_Node& n) -> Type* { return (Type*) new TYP(n); }
@@ -94,7 +98,7 @@ public:
         expectType<Y_Scalar>(node);
         return node.as<string>();
     }
-    string_view parse_static_string(const Y_Node& node, KeySet& domain)
+    string_view parse_static_string(const Y_Node& node, const KeySet& domain)
     {
         expectType<Y_Scalar>(node);
         auto str = node.as<string>();

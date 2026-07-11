@@ -1,10 +1,12 @@
 #ifndef _YAML_TYPES_H_
 #define _YAML_TYPES_H_
 
+#include "yamlif.h"
+
 class Type : public YamlIf
 {
 protected:
-    const string _descr;
+    string _descr;
 public:
     virtual ~Type() {}
 };
@@ -13,17 +15,31 @@ class Domain : public Type
 {
     map<string,string> _keyvals;
     string _choice_widget = "";
+    void parse_descr(const Y_Node& node)
+    {
+        _descr = parse_dynamic_string(node);
+    }
+    void parse_values(const Y_Node& node)
+    {
+        handle_dynamic_map<string>(node, _keyvals, PARSE(dynamic_string));
+    }
+    void parse_choice_widget(const Y_Node& node)
+    {
+        _choice_widget = parse_static_string(node,dom_choice_widget);
+    }
+    void parse_kind(const Y_Node& node) {}
 public:
     Domain(const Y_Node& node)
     {
-        // expectKey(node,kwd_values);
-        // auto values = node[kwd_values];
-        // handle_dynamic_map<string>(values, _keyvals,
-        //     [this](const Y_Node& n){ return get_string(n); }
-        //     );
-
-        // auto choice_widget = node[kwd_choice_widget];
-        // if ( choice_widget ) _choice_widget = choice_widget.as<string>();
+        HandlerMap<void> hmap
+            {
+                { kwd_descr, PARSE(descr) },
+                { kwd_values, PARSE(values) },
+                { kwd_choice_widget, PARSE(choice_widget) },
+                { kwd_kind, PARSE(kind) },
+            };
+        KeySet mandatory { kwd_descr, kwd_values };
+        handle_static_map(node, hmap, mandatory);
     }
 };
 
