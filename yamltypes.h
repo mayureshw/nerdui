@@ -13,6 +13,7 @@ protected:
     }
     void parse_kind(const Y_Node& node) {}
 public:
+    virtual void render(ostream&)=0;
     virtual bool is_union() { return false; }
     virtual ~Type() {}
 };
@@ -30,6 +31,9 @@ class Domain : public Type
         _choice_widget = parse_static_string(node,dom_choice_widget);
     }
 public:
+    void render(ostream& os)
+    {
+    }
     Domain(const Y_Node& node)
     {
         HandlerMap<void> hmap
@@ -77,6 +81,9 @@ class Union : public Type
             CREATE(UnionCases), check_type_exists);
     }
 public:
+    void render(ostream& os)
+    {
+    }
     bool is_union() { return true; }
     Union(const Y_Node& node)
     {
@@ -141,6 +148,9 @@ class Structure : public Type
         handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
     }
 public:
+    void render(ostream& os)
+    {
+    }
     Structure(const Y_Node& node)
     {
         HandlerMap<void> hmap

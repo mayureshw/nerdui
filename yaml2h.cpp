@@ -75,6 +75,7 @@ public:
     {
         mdata blankd;
         render_tmpl(_head_tmpl,blankd,os);
+        for(auto t:_types) t.second->render(os);
         render_tmpl(_sessions_tmpl,get_const_mdata(),os);
         render_tmpl(_tail_tmpl,blankd,os);
     }
