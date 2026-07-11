@@ -7,6 +7,11 @@ class Type : public YamlIf
 {
 protected:
     string _descr;
+    void parse_descr(const Y_Node& node)
+    {
+        _descr = parse_dynamic_string(node);
+    }
+    void parse_kind(const Y_Node& node) {}
 public:
     virtual ~Type() {}
 };
@@ -15,10 +20,6 @@ class Domain : public Type
 {
     map<string,string> _keyvals;
     string _choice_widget = "";
-    void parse_descr(const Y_Node& node)
-    {
-        _descr = parse_dynamic_string(node);
-    }
     void parse_values(const Y_Node& node)
     {
         handle_dynamic_map<string>(node, _keyvals, PARSE(dynamic_string));
@@ -27,7 +28,6 @@ class Domain : public Type
     {
         _choice_widget = parse_static_string(node,dom_choice_widget);
     }
-    void parse_kind(const Y_Node& node) {}
 public:
     Domain(const Y_Node& node)
     {
@@ -56,11 +56,32 @@ public:
     }
 };
 
+class Attrib
+{
+public:
+    Attrib(const Y_Node& node)
+    {
+    }
+};
+
 class Structure : public Type
 {
+    map<string,Attrib*> _attribs;
+    void parse_attribs(const Y_Node& node)
+    {
+        handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib));
+    }
 public:
     Structure(const Y_Node& node)
     {
+        HandlerMap<void> hmap
+            {
+                { kwd_descr, PARSE(descr) },
+                { kwd_attribs, PARSE(attribs) },
+                { kwd_kind, PARSE(kind) },
+            };
+        KeySet mandatory { kwd_descr, kwd_attribs };
+        handle_static_map(node, hmap, mandatory);
     }
 };
 

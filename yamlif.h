@@ -32,17 +32,22 @@ constexpr string_view kwd_selector_typ   = "selectorTyp";
 constexpr string_view kwd_DropDown       = "DropDown";
 constexpr string_view kwd_Radio          = "Radio";
 constexpr string_view kwd_Button         = "Button";
+constexpr string_view kwd_attribs        = "attribs";
 
 const KeySet emptyKeySet {};
 const KeySet dom_choice_widget { kwd_DropDown, kwd_Radio, kwd_Button };
 
 #define PARSE(NT,...) [this](const Y_Node& n){ return parse_##NT(n __VA_OPT__(,) __VA_ARGS__); }
-#define CREATE(TYP) [](const Y_Node& n) -> Type* { return (Type*) new TYP(n); }
+#define CREATE(TYP) [](const Y_Node& n) { return new TYP(n); }
+
+class Type;
 
 class YamlIf
 {
 public:
     static inline char* _curpath;
+    static inline map<string,string> _constants;
+    static inline map<string,Type*> _types;
     static void check_file_exists(char *path)
     {
         if ( not filesystem::exists(path) )

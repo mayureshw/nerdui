@@ -14,8 +14,6 @@
 
 class YamlSpec : public YamlIf
 {
-    map<string,string> _constants;
-    map<string,Type*> _types;
     Type* parse_type(const Y_Node& node)
     {
         HandlerMap<Type*> hmap
