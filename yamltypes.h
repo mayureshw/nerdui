@@ -56,20 +56,53 @@ public:
     }
 };
 
-class Attrib
+class Attrib;
+using AttribMap = map<string,Attrib*>;
+
+class Attrib : public YamlIf
 {
-public:
-    Attrib(const Y_Node& node)
+    string _descr;
+    string _type;
+    string _selector;
+    void parse_descr(const Y_Node& node)
     {
+        _descr = parse_dynamic_string(node);
+    }
+    void parse_type(const Y_Node& node)
+    {
+        _type = parse_dynamic_string(node);
+        check_type_exists(node,_type);
+    }
+    void parse_selector(const Y_Node& node, const AttribMap& attribs)
+    {
+        _selector = parse_dynamic_string(node);
+        if ( attribs.find(_selector) == attribs.end() )
+        {
+            cerr << "Selector used before declaring " << _selector;
+            print_err_loc(node);
+            exit(1);
+        }
+    }
+public:
+    Attrib(const Y_Node& node, const AttribMap& attribs)
+    {
+        HandlerMap<void> hmap
+            {
+                { kwd_descr, PARSE(descr) },
+                { kwd_type, PARSE(type) },
+                { kwd_selector, PARSE(selector,attribs) },
+            };
+        KeySet mandatory { kwd_descr, kwd_type };
+        handle_static_map(node, hmap, mandatory);
     }
 };
 
 class Structure : public Type
 {
-    map<string,Attrib*> _attribs;
+    AttribMap _attribs;
     void parse_attribs(const Y_Node& node)
     {
-        handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib));
+        handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
     }
 public:
     Structure(const Y_Node& node)

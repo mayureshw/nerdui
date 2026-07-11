@@ -33,12 +33,14 @@ constexpr string_view kwd_DropDown       = "DropDown";
 constexpr string_view kwd_Radio          = "Radio";
 constexpr string_view kwd_Button         = "Button";
 constexpr string_view kwd_attribs        = "attribs";
+constexpr string_view kwd_type           = "type";
+constexpr string_view kwd_selector       = "selector";
 
 const KeySet emptyKeySet {};
 const KeySet dom_choice_widget { kwd_DropDown, kwd_Radio, kwd_Button };
 
-#define PARSE(NT,...) [this](const Y_Node& n){ return parse_##NT(n __VA_OPT__(,) __VA_ARGS__); }
-#define CREATE(TYP) [](const Y_Node& n) { return new TYP(n); }
+#define PARSE(NT,...) [this __VA_OPT__(,) __VA_ARGS__](const Y_Node& n){ return parse_##NT(n __VA_OPT__(,) __VA_ARGS__); }
+#define CREATE(TYP,...) [this](const Y_Node& n) { return new TYP(n __VA_OPT__(,) __VA_ARGS__); }
 
 class Type;
 
@@ -53,6 +55,15 @@ public:
         if ( not filesystem::exists(path) )
         {
             cerr << "File not found: " << path << endl;
+            exit(1);
+        }
+    }
+    static void check_type_exists(const Y_Node& node, string type)
+    {
+        if ( _types.find(type) == _types.end() )
+        {
+            cerr << "Type used before definition " << type;
+            print_err_loc(node);
             exit(1);
         }
     }
