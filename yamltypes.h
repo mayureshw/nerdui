@@ -44,10 +44,27 @@ public:
     }
 };
 
+class UnionCases : public YamlIf
+{
+    map<string,string> _keytyp;
+    string parse_type(const Y_Node& node)
+    {
+        auto type = parse_dynamic_string(node);
+        check_type_exists(node,type);
+        return type;
+    }
+public:
+    UnionCases(const Y_Node& node)
+    {
+        handle_dynamic_map<string>(node, _keytyp, PARSE(type));
+    }
+};
+
 class Union : public Type
 {
     string _selectorTyp;
     bool _selector_is_union;
+    map<string,UnionCases*> _typ_cases;
     void parse_selector_typ(const Y_Node& node)
     {
         _selectorTyp = parse_dynamic_string(node);
@@ -56,7 +73,7 @@ class Union : public Type
     }
     void parse_cases(const Y_Node& node)
     {
-        //handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
+        handle_dynamic_map<UnionCases*>(node, _typ_cases, CREATE(UnionCases));
     }
 public:
     bool is_union() { return true; }
