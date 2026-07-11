@@ -14,6 +14,24 @@
 
 class YamlSpec : public YamlIf
 {
+    static constexpr string_view _sessions_tmpl = R"TMPL(
+#define APP_TITLE "{{app_title}}"
+
+using DefaultSessionType = {{default_session}};
+)TMPL";
+
+    static constexpr string_view _head_tmpl = R"TMPL(
+#ifndef _GENTYPES_H_
+#define _GENTYPES_H_
+
+#include "basetypes.h"
+
+)TMPL";
+
+    static constexpr string_view _tail_tmpl = R"TMPL(
+#endif
+)TMPL";
+
     Type* parse_type(const Y_Node& node)
     {
         HandlerMap<Type*> hmap
@@ -41,7 +59,25 @@ class YamlSpec : public YamlIf
             };
         handle_static_map(node, hmap);
     }
+    void render_tmpl(string_view tmplstr, mdata d, ostream& os)
+    {
+        mustache tmpl {string(tmplstr)};
+        tmpl.render(d,os);
+    }
+    mdata get_const_mdata()
+    {
+        mdata d;
+        for(const auto& [k,v] : _constants) d.set(k,v);
+        return d;
+    }
 public:
+    void render(ostream& os = cout)
+    {
+        mdata blankd;
+        render_tmpl(_head_tmpl,blankd,os);
+        render_tmpl(_sessions_tmpl,get_const_mdata(),os);
+        render_tmpl(_tail_tmpl,blankd,os);
+    }
     void parse_yaml(char* path)
     {
         try {
@@ -70,4 +106,5 @@ int main(int argc, char *argv[])
     
     YamlSpec yaml_spec;
     for(int i=1; i<argc; i++) yaml_spec.parse_yaml(argv[i]);
+    yaml_spec.render();
 }
