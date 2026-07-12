@@ -54,7 +54,7 @@ public:
 )TMPL";
 
     map<string,string> _keyvals;
-    string _choice_widget = "Radio";
+    string _choice_widget = "DropDown";
     void parse_values(const Y_Node& node)
     {
         handle_dynamic_map<string>(node, _keyvals, PARSE(dynamic_string));
@@ -152,6 +152,8 @@ class Attrib : public YamlIf
     string _descr;
     string _type;
     string _selector;
+    uint32_t _card_min = 0;
+    uint32_t _card_max = 1;
     void parse_descr(const Y_Node& node)
     {
         _descr = parse_dynamic_string(node);
@@ -172,6 +174,18 @@ class Attrib : public YamlIf
         }
     }
 public:
+    mdata get_mdata(string_view name)
+    {
+        mdata d;
+        d.set(string(kwd_name),string(name));
+        d.set(string(kwd_descr),_descr);
+        d.set(string(kwd_type),_type);
+        d.set(string(kwd_selector),_selector);
+        d.set(string(kwd_has_selector),!_selector.empty());
+        d.set(string(kwd_card_min),to_string(_card_min));
+        d.set(string(kwd_card_max),to_string(_card_max));
+        return d;
+    }
     Attrib(const Y_Node& node, const AttribMap& attribs)
     {
         HandlerMap<void> hmap
@@ -187,14 +201,56 @@ public:
 
 class Structure : public Type
 {
+    static constexpr string_view _struct_tmpl = R"TMPL(
+class {{name}} : public Struct<{{name}}>
+{
+public:
+    constexpr static char _name[] = "{{name}}";
+    constexpr static char _descr[] = "{{descr}}";
+    constexpr static string_view _codes[] {
+        {{#attribs}}
+        "{{name}}",
+        {{/attribs}}
+        };
+    constexpr static int _attribcnt = sizeof(_codes)/sizeof(_codes[0]);
+    constexpr static array<string_view,_attribcnt> _adescr {
+        {{#attribs}}
+        "{{descr}}",
+        {{/attribs}}
+        };
+
+{{#attribs}}
+    Attrib<{{type}},{{card_min}},{{card_max}}> {{name}}{{#has_selector}} { {{selector}}.get() }{{/has_selector}};
+{{/attribs}}
+
+    const array<BaseAttrib*,_attribcnt> _attribs {
+        {{#attribs}}
+        &{{name}},
+        {{/attribs}}
+        };
+};
+)TMPL";
+
     AttribMap _attribs;
     void parse_attribs(const Y_Node& node)
     {
         handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
     }
-public:
-    void render(string_view,ostream& os)
+    mdata get_mdata(string_view name)
     {
+        mdata d;
+        d.set(string(kwd_name),string(name));
+        d.set(string(kwd_descr),_descr);
+
+        mdata attribs {mdata::type::list};
+        for (const auto& [k, v] : _attribs) attribs << v->get_mdata(k);
+        d.set(string(kwd_attribs),attribs);
+        return d;
+    }
+public:
+    void render(string_view name,ostream& os)
+    {
+        render_tmpl(_struct_tmpl,get_mdata(name),os);
     }
     Structure(const Y_Node& node)
     {

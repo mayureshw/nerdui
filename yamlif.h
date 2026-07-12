@@ -36,9 +36,12 @@ constexpr string_view kwd_Button         = "Button";
 constexpr string_view kwd_attribs        = "attribs";
 constexpr string_view kwd_type           = "type";
 constexpr string_view kwd_selector       = "selector";
+constexpr string_view kwd_has_selector   = "has_selector";
 constexpr string_view kwd_cases          = "cases";
 constexpr string_view kwd_key            = "key";
 constexpr string_view kwd_value          = "value";
+constexpr string_view kwd_card_min       = "card_min";
+constexpr string_view kwd_card_max       = "card_max";
 
 const KeySet emptyKeySet {};
 const KeySet dom_choice_widget { kwd_DropDown, kwd_Radio, kwd_Button };
@@ -69,7 +72,7 @@ public:
     }
     mdata map_to_list(const map<string,string>& m)
     {
-        mdata list{mdata::type::list};
+        mdata list {mdata::type::list};
         for (const auto& [k, v] : m)
         {
             mdata item;
