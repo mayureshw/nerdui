@@ -44,7 +44,9 @@ using DefaultSessionType = {{default_session}};
     }
     void parse_types(const Y_Node& node)
     {
-        handle_dynamic_map<Type*>(node, _types, PARSE(type));
+        handle_dynamic_map<Type*>(node, _types, PARSE(type),
+            [](const Y_Node&, string key){ _ordered_types.push_back(key); }
+            );
     }
     void parse_constants(const Y_Node& node)
     {
@@ -70,7 +72,7 @@ public:
     {
         mdata blankd;
         render_tmpl(_head_tmpl,blankd,os);
-        for(auto t:_types) t.second->render(t.first,os);
+        for(auto t:_ordered_types) _types[t]->render(t,os);
         render_tmpl(_sessions_tmpl,get_const_mdata(),os);
         render_tmpl(_tail_tmpl,blankd,os);
     }

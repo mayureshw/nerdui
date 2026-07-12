@@ -59,6 +59,7 @@ public:
     static inline char* _curpath;
     static inline map<string,string> _constants;
     static inline map<string,Type*> _types;
+    static inline vector<string> _ordered_types;
     static void check_file_exists(char *path)
     {
         if ( not filesystem::exists(path) )
