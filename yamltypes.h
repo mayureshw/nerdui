@@ -13,7 +13,12 @@ protected:
     }
     void parse_kind(const Y_Node& node) {}
 public:
-    virtual void render(string_view,ostream&)=0;
+    virtual mdata get_mdata(string_view name)=0;
+    virtual void render(string_view name, ostream& os)
+    {
+        render_tmpl(get_tmpl(),get_mdata(name),os);
+    }
+    virtual string_view get_tmpl()=0;
     virtual bool is_union() { return false; }
     virtual ~Type() {}
 };
@@ -63,6 +68,7 @@ public:
     {
         _choice_widget = parse_static_string(node,dom_choice_widget);
     }
+public:
     mdata get_mdata(string_view name)
     {
         mdata d;
@@ -74,11 +80,7 @@ public:
         d.set(string(kwd_values),map_to_list(_keyvals));
         return d;
     }
-public:
-    void render(string_view name, ostream& os)
-    {
-        render_tmpl(_domain_tmpl,get_mdata(name),os);
-    }
+    string_view get_tmpl() { return _domain_tmpl; }
     Domain(const Y_Node& node)
     {
         HandlerMap<void> hmap
@@ -103,6 +105,10 @@ class UnionCases : public YamlIf
         return type;
     }
 public:
+    mdata get_mdata()
+    {
+        return map_to_list(_keytyp);
+    }
     UnionCases(const Y_Node& node)
     {
         handle_dynamic_map<string>(node, _keytyp, PARSE(type));
@@ -111,14 +117,57 @@ public:
 
 class Union : public Type
 {
+    static constexpr string_view _union_tmpl = R"TMPL(
+class {{name}} : public Union<{{name}},{{selectorTyp}},{{#cases}}{{#value}}{{value}}{{^is_last}},{{/is_last}}{{/value}}{{^is_last}},{{/is_last}}{{/cases}}>
+{
+public:
+    constexpr static char _name[] = "{{name}}";
+    constexpr static char _descr[] = "{{descr}}";
+    template <typename Callback> void dispatch(Callback cb)
+    {
+{{^selectorIsUnion}}
+        using t_selectorEnum = e_{{selectorTyp}};
+        switch( _selector.val() ) {
+{{#cases}}
+{{#value}}
+        case t_selectorEnum::{{key}}: return cb.template operator()<{{value}}>();
+{{/value}}
+{{/cases}}
+        default: return cb.template operator()<monostate>();
+        }
+{{/selectorIsUnion}}
+{{#selectorIsUnion}}
+        visit(overloaded{
+{{#cases}}
+        [&]({{key}}& curvariant) {
+        using t_selectorEnum = e_{{key}};
+            switch(curvariant.val()) {
+{{#value}}
+            case t_selectorEnum::{{key}}: return cb.template operator()<{{value}}>();
+{{/value}}
+            default: return cb.template operator()<monostate>();
+            }
+{{#value}}
+{{/value}}
+        },
+{{/cases}}
+        [&](auto& curvariant) {
+            return cb.template operator()<monostate>();
+        },
+        }, _selector._u);
+{{/selectorIsUnion}}
+    }
+};
+)TMPL";
+
     string _selectorTyp;
-    bool _selector_is_union;
+    bool _selectorIsUnion;
     map<string,UnionCases*> _typ_cases;
     void parse_selector_typ(const Y_Node& node)
     {
         _selectorTyp = parse_dynamic_string(node);
         auto typ = check_type_exists(node,_selectorTyp);
-        _selector_is_union = typ->is_union() ;
+        _selectorIsUnion = typ->is_union() ;
     }
     void parse_cases(const Y_Node& node)
     {
@@ -126,9 +175,26 @@ class Union : public Type
             CREATE(UnionCases), check_type_exists);
     }
 public:
-    void render(string_view,ostream& os)
+    mdata get_mdata(string_view name)
     {
+        mdata d;
+        d.set(string(kwd_name),string(name));
+        d.set(string(kwd_descr),_descr);
+        d.set(string(kwd_selector_typ),_selectorTyp);
+        d.set(string(kwd_selectorIsUnion),_selectorIsUnion);
+        mdata cases {mdata::type::list};
+        for(auto it=_typ_cases.begin(); it!=_typ_cases.end(); it++)
+        {
+            mdata d;
+            d.set(string(kwd_key),it->first);
+            d.set(string(kwd_value),it->second->get_mdata());
+            d.set(string(kwd_is_last),next(it)==_typ_cases.end());
+            cases << move(d);
+        }
+        d.set(string(kwd_cases),cases);
+        return d;
     }
+    string_view get_tmpl() { return _union_tmpl; }
     bool is_union() { return true; }
     Union(const Y_Node& node)
     {
@@ -236,6 +302,7 @@ public:
     {
         handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
     }
+public:
     mdata get_mdata(string_view name)
     {
         mdata d;
@@ -247,11 +314,7 @@ public:
         d.set(string(kwd_attribs),attribs);
         return d;
     }
-public:
-    void render(string_view name,ostream& os)
-    {
-        render_tmpl(_struct_tmpl,get_mdata(name),os);
-    }
+    string_view get_tmpl() { return _struct_tmpl; }
     Structure(const Y_Node& node)
     {
         HandlerMap<void> hmap
