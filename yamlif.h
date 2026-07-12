@@ -57,9 +57,8 @@ class YamlIf
 {
 public:
     static inline char* _curpath;
-    static inline map<string,string> _constants;
-    static inline map<string,Type*> _types;
-    static inline vector<string> _ordered_types;
+    static inline OrderedMap<string,string> _constants;
+    static inline OrderedMap<string,Type*> _types;
     static void check_file_exists(char *path)
     {
         if ( not filesystem::exists(path) )
@@ -73,23 +72,25 @@ public:
         mustache tmpl {string(tmplstr)};
         tmpl.render(d,os);
     }
-    mdata map_to_list(const map<string,string>& m)
+    mdata map_to_list(const OrderedMap<string,string>& m)
     {
         mdata list {mdata::type::list};
-        for(auto it=m.begin(); it!=m.end(); it++)
+        const auto& ordv = m.as_vec();
+        for(auto it=ordv.begin(); it!=ordv.end(); it++)
         {
             mdata item;
-            item.set(string(kwd_key), it->first);
-            item.set(string(kwd_value), it->second);
-            item.set(string(kwd_is_last), next(it)==m.end());
+            item.set(string(kwd_key), (*it)->first);
+            item.set(string(kwd_value), (*it)->second);
+            item.set(string(kwd_is_last), next(it)==ordv.end());
             list << move(item);
         }
         return list;
     }
     static Type* check_type_exists(const Y_Node& node, string type)
     {
-        auto it = _types.find(type);
-        if ( it == _types.end() )
+        const auto& m = _types.as_map();
+        auto it = m.find(type);
+        if ( it == m.end() )
         {
             cerr << "Type used before definition " << type;
             print_err_loc(node);
@@ -195,7 +196,7 @@ public:
     // and builds the return values into a tgtmap against a key
     template<typename ValTyp>
     static void handle_dynamic_map(const Y_Node& node,
-        map<string,ValTyp>& tgtmap, NodeHandler<ValTyp> vhandler,
+        OrderedMap<string,ValTyp>& tgtmap, NodeHandler<ValTyp> vhandler,
         function<void(const Y_Node&,string)> khandler = dummyHandler)
     {
         expectType<Y_Map>(node);
@@ -204,7 +205,7 @@ public:
             auto key_node = kv.first;
             auto key = key_node.as<string>();
             khandler(key_node,key);
-            if ( tgtmap.find(key) != tgtmap.end() )
+            if ( tgtmap.contains(key) )
             {
                 cerr << "Duplicate key '" << key << "'";
                 print_err_loc(node);

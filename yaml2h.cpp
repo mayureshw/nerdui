@@ -9,6 +9,8 @@
 #include <map>
 #include <set>
 
+using namespace std;
+#include "ordmap.h"
 #include "yamlif.h"
 #include "yamltypes.h"
 
@@ -44,9 +46,7 @@ using DefaultSessionType = {{default_session}};
     }
     void parse_types(const Y_Node& node)
     {
-        handle_dynamic_map<Type*>(node, _types, PARSE(type),
-            [](const Y_Node&, string key){ _ordered_types.push_back(key); }
-            );
+        handle_dynamic_map<Type*>(node, _types, PARSE(type));
     }
     void parse_constants(const Y_Node& node)
     {
@@ -64,7 +64,8 @@ using DefaultSessionType = {{default_session}};
     mdata get_const_mdata()
     {
         mdata d;
-        for(const auto& [k,v] : _constants) d.set(k,v);
+        const auto& constv = _constants.as_vec();
+        for(const auto& c : constv) d.set(c->first,c->second);
         return d;
     }
 public:
@@ -72,7 +73,8 @@ public:
     {
         mdata blankd;
         render_tmpl(_head_tmpl,blankd,os);
-        for(auto t:_ordered_types) _types[t]->render(t,os);
+        const auto& tv = _types.as_vec();
+        for(const auto& t:tv) t->second->render(t->first,os);
         render_tmpl(_sessions_tmpl,get_const_mdata(),os);
         render_tmpl(_tail_tmpl,blankd,os);
     }
@@ -90,7 +92,8 @@ public:
     }
     ~YamlSpec()
     {
-        for(auto it:_types) delete it.second;
+        const auto& tv = _types.as_vec();
+        for(const auto& t:tv) delete t->second;
     }
 };
 

@@ -58,7 +58,7 @@ public:
 };
 )TMPL";
 
-    map<string,string> _keyvals;
+    OrderedMap<string,string> _keyvals;
     string _choice_widget = "DropDown";
     void parse_values(const Y_Node& node)
     {
@@ -97,7 +97,7 @@ public:
 
 class UnionCases : public YamlIf
 {
-    map<string,string> _keytyp;
+    OrderedMap<string,string> _keytyp;
     string parse_type(const Y_Node& node)
     {
         auto type = parse_dynamic_string(node);
@@ -162,7 +162,7 @@ public:
 
     string _selectorTyp;
     bool _selectorIsUnion;
-    map<string,UnionCases*> _typ_cases;
+    OrderedMap<string,UnionCases*> _typ_cases;
     void parse_selector_typ(const Y_Node& node)
     {
         _selectorTyp = parse_dynamic_string(node);
@@ -183,12 +183,13 @@ public:
         d.set(string(kwd_selector_typ),_selectorTyp);
         d.set(string(kwd_selectorIsUnion),_selectorIsUnion);
         mdata cases {mdata::type::list};
-        for(auto it=_typ_cases.begin(); it!=_typ_cases.end(); it++)
+        const auto& v = _typ_cases.as_vec();
+        for(auto it=v.begin(); it!=v.end(); it++)
         {
             mdata d;
-            d.set(string(kwd_key),it->first);
-            d.set(string(kwd_value),it->second->get_mdata());
-            d.set(string(kwd_is_last),next(it)==_typ_cases.end());
+            d.set(string(kwd_key),(*it)->first);
+            d.set(string(kwd_value),(*it)->second->get_mdata());
+            d.set(string(kwd_is_last),next(it)==v.end());
             cases << move(d);
         }
         d.set(string(kwd_cases),cases);
@@ -211,7 +212,7 @@ public:
 };
 
 class Attrib;
-using AttribMap = map<string,Attrib*>;
+using AttribMap = OrderedMap<string,Attrib*>;
 
 class Attrib : public YamlIf
 {
@@ -232,7 +233,7 @@ class Attrib : public YamlIf
     void parse_selector(const Y_Node& node, const AttribMap& attribs)
     {
         _selector = parse_dynamic_string(node);
-        if ( attribs.find(_selector) == attribs.end() )
+        if ( not attribs.contains(_selector) )
         {
             cerr << "Selector used before declaring " << _selector;
             print_err_loc(node);
@@ -310,7 +311,8 @@ public:
         d.set(string(kwd_descr),_descr);
 
         mdata attribs {mdata::type::list};
-        for (const auto& [k, v] : _attribs) attribs << v->get_mdata(k);
+        const auto& attrv = _attribs.as_vec();
+        for (const auto& a : attrv) attribs << a->second->get_mdata(a->first);
         d.set(string(kwd_attribs),attribs);
         return d;
     }
