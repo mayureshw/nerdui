@@ -25,6 +25,7 @@ constexpr string_view kwd_domain         = "domain";
 constexpr string_view kwd_union          = "union";
 constexpr string_view kwd_structure      = "structure";
 constexpr string_view kwd_kind           = "kind";
+constexpr string_view kwd_name           = "name";
 constexpr string_view kwd_descr          = "descr";
 constexpr string_view kwd_values         = "values";
 constexpr string_view kwd_choice_widget  = "choice_widget";
@@ -36,6 +37,8 @@ constexpr string_view kwd_attribs        = "attribs";
 constexpr string_view kwd_type           = "type";
 constexpr string_view kwd_selector       = "selector";
 constexpr string_view kwd_cases          = "cases";
+constexpr string_view kwd_key            = "key";
+constexpr string_view kwd_value          = "value";
 
 const KeySet emptyKeySet {};
 const KeySet dom_choice_widget { kwd_DropDown, kwd_Radio, kwd_Button };
@@ -58,6 +61,23 @@ public:
             cerr << "File not found: " << path << endl;
             exit(1);
         }
+    }
+    void render_tmpl(string_view tmplstr, mdata d, ostream& os)
+    {
+        mustache tmpl {string(tmplstr)};
+        tmpl.render(d,os);
+    }
+    mdata map_to_list(const map<string,string>& m)
+    {
+        mdata list{mdata::type::list};
+        for (const auto& [k, v] : m)
+        {
+            mdata item;
+            item[string(kwd_key)] = k;
+            item[string(kwd_value)] = v;
+            list << move(item);
+        }
+        return list;
     }
     static Type* check_type_exists(const Y_Node& node, string type)
     {

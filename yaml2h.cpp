@@ -59,11 +59,6 @@ using DefaultSessionType = {{default_session}};
             };
         handle_static_map(node, hmap);
     }
-    void render_tmpl(string_view tmplstr, mdata d, ostream& os)
-    {
-        mustache tmpl {string(tmplstr)};
-        tmpl.render(d,os);
-    }
     mdata get_const_mdata()
     {
         mdata d;
@@ -75,7 +70,7 @@ public:
     {
         mdata blankd;
         render_tmpl(_head_tmpl,blankd,os);
-        for(auto t:_types) t.second->render(os);
+        for(auto t:_types) t.second->render(t.first,os);
         render_tmpl(_sessions_tmpl,get_const_mdata(),os);
         render_tmpl(_tail_tmpl,blankd,os);
     }

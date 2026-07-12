@@ -13,15 +13,48 @@ protected:
     }
     void parse_kind(const Y_Node& node) {}
 public:
-    virtual void render(ostream&)=0;
+    virtual void render(string_view,ostream&)=0;
     virtual bool is_union() { return false; }
     virtual ~Type() {}
 };
 
 class Domain : public Type
 {
+    static constexpr string_view _domain_tmpl = R"TMPL(
+enum class e_{{name}} {
+{{#values}}
+    {{key}},
+{{/values}}
+};
+
+class {{name}} : public Domain<{{name}},e_{{name}}>
+{
+public:
+    constexpr static inline e_ChoiceWidget _choiceWidget = e_ChoiceWidget::{{choice_widget}};
+    using t_dom = e_{{name}};
+    constexpr static char _name[] = "{{name}}";
+    constexpr static char _descr[] = "{{descr}}";
+    constexpr static string_view _codes[] {
+        {{#values}}
+        "{{key}}",
+        {{/values}}
+        };
+    constexpr static size_t _domainsz = sizeof(_codes)/sizeof(_codes[0]);
+    constexpr static array<string_view,_domainsz> _vdescr {
+        {{#values}}
+        "{{value}}",
+        {{/values}}
+        };
+    constexpr static frozen::unordered_map<frozen::string,t_dom,_domainsz> _codeval = {
+        {{#values}}
+        { "{{key}}", t_dom::{{key}} },
+        {{/values}}
+        };
+};
+)TMPL";
+
     map<string,string> _keyvals;
-    string _choice_widget = "";
+    string _choice_widget = "Radio";
     void parse_values(const Y_Node& node)
     {
         handle_dynamic_map<string>(node, _keyvals, PARSE(dynamic_string));
@@ -30,9 +63,21 @@ class Domain : public Type
     {
         _choice_widget = parse_static_string(node,dom_choice_widget);
     }
-public:
-    void render(ostream& os)
+    mdata get_mdata(string_view name)
     {
+        mdata d;
+        d.set(string(kwd_name),string(name));
+        d.set(string(kwd_descr),_descr);
+        d.set(string(kwd_choice_widget),_choice_widget);
+
+        mdata values;
+        d.set(string(kwd_values),map_to_list(_keyvals));
+        return d;
+    }
+public:
+    void render(string_view name, ostream& os)
+    {
+        render_tmpl(_domain_tmpl,get_mdata(name),os);
     }
     Domain(const Y_Node& node)
     {
@@ -81,7 +126,7 @@ class Union : public Type
             CREATE(UnionCases), check_type_exists);
     }
 public:
-    void render(ostream& os)
+    void render(string_view,ostream& os)
     {
     }
     bool is_union() { return true; }
@@ -148,7 +193,7 @@ class Structure : public Type
         handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
     }
 public:
-    void render(ostream& os)
+    void render(string_view,ostream& os)
     {
     }
     Structure(const Y_Node& node)
