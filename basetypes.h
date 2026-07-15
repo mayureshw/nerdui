@@ -23,6 +23,27 @@ enum class e_ChoiceWidget
     Button,
 };
 
+class ErrIf
+{
+    bool _has_err = false;
+    string _err;
+public:
+    bool hasErr() { return _has_err; }
+    void markErr(string err)
+    {
+        _err = err;
+        _has_err = true;
+    }
+    void clearErr()
+    {
+        _err = "";
+        _has_err = false;
+    }
+};
+
+class Type : public ErrIf {};
+
+
 class HtmlFormatter
 {
     ostream& _os;
@@ -69,7 +90,7 @@ public:
     HtmlFormatter(ostream& os) : _os(os) {}
 };
 
-class Settable
+class Settable : public Type
 {
 public:
     virtual void set(string_view)=0;
@@ -141,25 +162,20 @@ public:
     E val() { return _val; }
     void set(string_view val)
     {
-        _val = code2val(val);
-        _is_set = true;
+        auto it = D::_codeval.find(val);
+        if ( it == D::_codeval.end() )
+        {
+            _val = it->second;
+            _is_set = true;
+            clearErr();
+        }
+        else markErr("Invalid value");
     }
     string fieldname() { return D::_name; }
     static bool isStruct() { return false; }
     string_view code() { return D::_codes[index()]; }
     string_view vdescr() { return D::_vdescr[index()]; }
     string_view descr() { return D::_descr; }
-    E code2val(string_view& code)
-    {
-        auto it = D::_codeval.find(code);
-        if ( it == D::_codeval.end() )
-        {
-            stringstream err;
-            err << "Attempt to set invalid value for domain " << D::_name << "::" << code;
-            throw domain_error( err.str() );
-        }
-        return it->second;
-    }
     void getResponse(Response& resp)
     {
         if ( not _is_set )
@@ -171,7 +187,7 @@ public:
     }
 };
 
-template <typename T, typename SelectorType, typename... UnionOf> class Union
+template <typename T, typename SelectorType, typename... UnionOf> class Union : public Type
 {
     T& tinst() { return static_cast<T&>(*this); }
 protected:
@@ -198,7 +214,7 @@ public:
     Union(SelectorType& selector) : _selector(selector) {}
 };
 
-template <typename T> class Struct
+template <typename T> class Struct : public Type
 {
     T& tinst() { return static_cast<T&>(*this); }
 public:
