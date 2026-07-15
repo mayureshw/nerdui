@@ -250,7 +250,11 @@ template <typename T, int card_min, int card_max> class Attrib : public BaseAttr
 
     AttrTyp _val;
 public:
-    void getResponse(Response& resp) requires (is_scalar) { _val.getResponse(resp); }
+    void getResponse(Response& resp)
+    {
+        static_assert( is_scalar, "getResponse not implemented for vectors" );
+        _val.getResponse(resp);
+    }
     bool isStruct() { return AttrTyp::isStruct(); }
     T& get() requires (card_max == 1) { return _val; }
     const T& get() const requires (card_max == 1) { return _val; }
