@@ -50,7 +50,7 @@ class HtmlFormatter
 public:
     void text(string_view s) { _os << s; }
     template <typename... Args> void text(Args&&... args)
-    { (_os << ... << forward<Args>(args)); }
+    { (_os << ... << std::forward<Args>(args)); }
     void nl() { _os << "\n"; }
     void br() { _os << "<br>\n"; }
     void li_open() { _os << "<li>"; }
@@ -60,7 +60,7 @@ public:
     void p_open() { _os << "<p>"; }
     void p_close() { _os << "</p>"; }
     template <typename... Args> void p(Args&&... args)
-    { p_open(); text(forward<Args>(args)...); p_close(); }
+    { p_open(); text(std::forward<Args>(args)...); p_close(); }
     void select_open(string_view name) { _os << "<select name=\"" << name << "\">"; }
     void select_close() { _os << "</select>"; }
     void option(string_view code, string_view s)
@@ -278,7 +278,7 @@ public:
     Attrib() requires (card_max != 1) = default;
 
     template<typename... Args> requires (card_max == 1)
-    explicit Attrib(Args&&... args) : _val(forward<Args>(args)...)
+    explicit Attrib(Args&&... args) : _val(std::forward<Args>(args)...)
     {}
 
 
