@@ -68,15 +68,20 @@ using DefaultSessionType = {{default_session}};
         for(const auto& c : constv) d.set(c->first,c->second);
         return d;
     }
-public:
-    void render(ostream& os = cout)
+    void render_types_h(ostream& os)
     {
         mdata blankd;
         render_tmpl(_head_tmpl,blankd,os);
         const auto& tv = _types.as_vec();
-        for(const auto& t:tv) t->second->render(t->first,os);
+        for(const auto& t:tv) t->second->render_types_h(t->first,os);
         render_tmpl(_sessions_tmpl,get_const_mdata(),os);
         render_tmpl(_tail_tmpl,blankd,os);
+    }
+public:
+    void render()
+    {
+        auto os_file_types_h = get_ofstream(file_types_h);
+        render_types_h(os_file_types_h);
     }
     void parse_yaml(char* path)
     {

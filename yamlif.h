@@ -45,6 +45,8 @@ constexpr string_view kwd_card_min       = "card_min";
 constexpr string_view kwd_card_max       = "card_max";
 constexpr string_view kwd_is_last        = "is_last";
 
+constexpr string_view file_types_h = "types.h";
+
 const KeySet emptyKeySet {};
 const KeySet dom_choice_widget { kwd_DropDown, kwd_Radio, kwd_Button };
 
@@ -66,6 +68,16 @@ public:
             cerr << "File not found: " << path << endl;
             exit(1);
         }
+    }
+    static ofstream get_ofstream(string_view path)
+    {
+        ofstream out {string(path)};
+        if ( not out )
+        {
+            cerr << "Could not open file for writing: " << path << endl;
+            exit(1);
+        }
+        return out;
     }
     void render_tmpl(string_view tmplstr, mdata d, ostream& os)
     {

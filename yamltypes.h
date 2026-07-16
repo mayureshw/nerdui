@@ -14,11 +14,11 @@ protected:
     void parse_kind(const Y_Node& node) {}
 public:
     virtual mdata get_mdata(string_view name)=0;
-    virtual void render(string_view name, ostream& os)
+    virtual void render_types_h(string_view name, ostream& os)
     {
-        render_tmpl(get_tmpl(),get_mdata(name),os);
+        render_tmpl(get_tmpl_types_h(),get_mdata(name),os);
     }
-    virtual string_view get_tmpl()=0;
+    virtual string_view get_tmpl_types_h()=0;
     virtual bool is_union() { return false; }
     virtual ~Type() {}
 };
@@ -80,7 +80,7 @@ public:
         d.set(string(kwd_values),map_to_list(_keyvals));
         return d;
     }
-    string_view get_tmpl() { return _domain_tmpl; }
+    string_view get_tmpl_types_h() { return _domain_tmpl; }
     Domain(const Y_Node& node)
     {
         HandlerMap<void> hmap
@@ -195,7 +195,7 @@ public:
         d.set(string(kwd_cases),cases);
         return d;
     }
-    string_view get_tmpl() { return _union_tmpl; }
+    string_view get_tmpl_types_h() { return _union_tmpl; }
     bool is_union() { return true; }
     Union(const Y_Node& node)
     {
@@ -316,7 +316,7 @@ public:
         d.set(string(kwd_attribs),attribs);
         return d;
     }
-    string_view get_tmpl() { return _struct_tmpl; }
+    string_view get_tmpl_types_h() { return _struct_tmpl; }
     Structure(const Y_Node& node)
     {
         HandlerMap<void> hmap
