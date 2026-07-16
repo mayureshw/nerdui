@@ -81,7 +81,11 @@ public:
     }
 };
 
+#ifdef WASM
+class SessionManager
+#else
 class SessionManager : public FCGIBridge
+#endif
 {
     unordered_map<string,Session*> _sessions;
 public:
