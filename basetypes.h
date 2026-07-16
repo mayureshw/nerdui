@@ -158,18 +158,38 @@ template <typename D, typename E> class Domain : public Settable
         }
         resp.hf.nl();
     }
+    void _set(E eval)
+    {
+        _val = eval;
+        _is_set = true;
+        clearErr();
+    }
 public:
     E val() { return _val; }
     void set(string_view val)
     {
+        // frozen's hash is seen not working on wasm
+        // consider replacing frozen with gperf generated code
+        // consider filing a bug report
+        // sequential search is a stop gap (ok for small domains)
+#ifdef WASM
+        for( const auto& [k,v]: D::_codeval )
+        {
+            if ( k == val )
+            {
+                _set(v);
+                return;
+            }
+        }
+#else
         auto it = D::_codeval.find(val);
         if ( it == D::_codeval.end() )
         {
-            _val = it->second;
-            _is_set = true;
-            clearErr();
+            _set(it->second);
+            return;
         }
-        else markErr("Invalid value");
+#endif
+        markErr("Invalid value");
     }
     string fieldname() { return D::_name; }
     static bool isStruct() { return false; }
