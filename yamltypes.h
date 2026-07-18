@@ -35,7 +35,7 @@ enum class e_{{name}} {
 class {{name}} : public Domain<{{name}},e_{{name}}>
 {
 public:
-    constexpr static inline e_ChoiceWidget _choiceWidget = e_ChoiceWidget::{{choice_widget}};
+    constexpr static inline e_choice_widget _choice_widget = e_choice_widget::{{choice_widget}};
     using t_dom = e_{{name}};
     constexpr static char _name[] = "{{name}}";
     constexpr static char _descr[] = "{{descr}}";
@@ -59,7 +59,7 @@ public:
 )TMPL";
 
     OrderedMap<string,string> _keyvals;
-    string _choice_widget { kwd_DropDown };
+    string _choice_widget { kwd_dropdown };
     void parse_values(const Y_Node& node)
     {
         handle_dynamic_map<string>(node, _keyvals, PARSE(dynamic_string));

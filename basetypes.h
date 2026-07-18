@@ -16,11 +16,11 @@ template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-enum class e_ChoiceWidget
+enum class e_choice_widget
 {
-    DropDown,
-    Radio,
-    Button,
+    dropdown,
+    radio,
+    button,
 };
 
 enum class e_persistence_type
@@ -140,7 +140,7 @@ template <typename D, typename E> class Domain : public Settable
     {
         resp.hf.text(D::_descr,": ");
 
-        if constexpr (D::_choiceWidget == e_ChoiceWidget::DropDown)
+        if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
             resp.hf.select_open(D::_name);
             resp.hf.nl();
@@ -151,13 +151,13 @@ template <typename D, typename E> class Domain : public Settable
             }
             resp.hf.select_close();
         }
-        else if constexpr (D::_choiceWidget == e_ChoiceWidget::Radio)
+        else if constexpr (D::_choice_widget == e_choice_widget::radio)
         {
             resp.hf.br();
             for (size_t i = 0; i < D::_domainsz; i++)
                 resp.hf.radio(D::_name, D::_codes[i], D::_vdescr[i]);
         }
-        else if constexpr (D::_choiceWidget == e_ChoiceWidget::Button)
+        else if constexpr (D::_choice_widget == e_choice_widget::button)
         {
             for (size_t i = 0; i < D::_domainsz; i++)
                 resp.hf.button(D::_name, D::_codes[i], D::_vdescr[i]);

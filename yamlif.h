@@ -33,9 +33,9 @@ constexpr string_view kwd_selector_typ    = "selectorTyp";
 constexpr string_view kwd_selector        = "selector";
 constexpr string_view kwd_has_selector    = "has_selector";
 constexpr string_view kwd_selectorIsUnion = "selectorIsUnion";
-constexpr string_view kwd_DropDown        = "DropDown";
-constexpr string_view kwd_Radio           = "Radio";
-constexpr string_view kwd_Button          = "Button";
+constexpr string_view kwd_dropdown        = "dropdown";
+constexpr string_view kwd_radio           = "radio";
+constexpr string_view kwd_button          = "button";
 constexpr string_view kwd_attribs         = "attribs";
 constexpr string_view kwd_type            = "type";
 constexpr string_view kwd_cases           = "cases";
@@ -55,7 +55,7 @@ constexpr string_view kwd_blob            = "blob";
 constexpr string_view file_types_h = "types.h";
 
 const KeySet emptyKeySet          { };
-const KeySet dom_choice_widget    { kwd_DropDown, kwd_Radio, kwd_Button };
+const KeySet dom_choice_widget    { kwd_dropdown, kwd_radio, kwd_button };
 const KeySet dom_bool             { kwd_true, kwd_false };
 const KeySet dom_persistence_type { kwd_transient, kwd_column, kwd_blob };
 
