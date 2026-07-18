@@ -59,7 +59,7 @@ public:
 )TMPL";
 
     OrderedMap<string,string> _keyvals;
-    string _choice_widget = "DropDown";
+    string _choice_widget { kwd_DropDown };
     void parse_values(const Y_Node& node)
     {
         handle_dynamic_map<string>(node, _keyvals, PARSE(dynamic_string));
@@ -219,6 +219,7 @@ class Attrib : public YamlIf
     string _descr;
     string _type;
     string _selector;
+    string _persistence_type { kwd_transient };
     uint32_t _card_min = 0;
     uint32_t _card_max = 1;
     void parse_descr(const Y_Node& node)
@@ -240,6 +241,10 @@ class Attrib : public YamlIf
             exit(1);
         }
     }
+    void parse_persistence_type(const Y_Node& node)
+    {
+        _persistence_type = parse_static_string(node,dom_persistence_type);
+    }
 public:
     mdata get_mdata(string_view name)
     {
@@ -260,6 +265,7 @@ public:
                 { kwd_descr, PARSE(descr) },
                 { kwd_type, PARSE(type) },
                 { kwd_selector, PARSE(selector,attribs) },
+                { kwd_persistence_type, PARSE(persistence_type) },
             };
         KeySet mandatory { kwd_descr, kwd_type };
         handle_static_map(node, hmap, mandatory);
