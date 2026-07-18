@@ -299,9 +299,14 @@ public:
 )TMPL";
 
     AttribMap _attribs;
+    bool _persistent = false;
     void parse_attribs(const Y_Node& node)
     {
         handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
+    }
+    void parse_persistent(const Y_Node& node)
+    {
+        _persistent = parse_static_string(node,dom_bool) == kwd_true;
     }
 public:
     mdata get_mdata(string_view name)
@@ -324,6 +329,7 @@ public:
                 { kwd_descr, PARSE(descr) },
                 { kwd_attribs, PARSE(attribs) },
                 { kwd_kind, PARSE(kind) },
+                { kwd_persistent, PARSE(persistent) },
             };
         KeySet mandatory { kwd_descr, kwd_attribs };
         handle_static_map(node, hmap, mandatory);

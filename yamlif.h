@@ -44,11 +44,15 @@ constexpr string_view kwd_value          = "value";
 constexpr string_view kwd_card_min       = "card_min";
 constexpr string_view kwd_card_max       = "card_max";
 constexpr string_view kwd_is_last        = "is_last";
+constexpr string_view kwd_persistent     = "persistent";
+constexpr string_view kwd_true           = "true";
+constexpr string_view kwd_false          = "false";
 
 constexpr string_view file_types_h = "types.h";
 
 const KeySet emptyKeySet {};
 const KeySet dom_choice_widget { kwd_DropDown, kwd_Radio, kwd_Button };
+const KeySet dom_bool { kwd_true, kwd_false };
 
 #define PARSE(NT,...) [this __VA_OPT__(,) __VA_ARGS__](const Y_Node& n){ return parse_##NT(n __VA_OPT__(,) __VA_ARGS__); }
 #define CREATE(TYP,...) [this](const Y_Node& n) { return new TYP(n __VA_OPT__(,) __VA_ARGS__); }
