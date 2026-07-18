@@ -280,6 +280,7 @@ class {{name}} : public Struct<{{name}}>
 public:
     constexpr static char _name[] = "{{name}}";
     constexpr static char _descr[] = "{{descr}}";
+    constexpr static bool _persistent = {{persistent}};
     constexpr static string_view _codes[] {
         {{#attribs}}
         "{{name}}",
@@ -305,14 +306,14 @@ public:
 )TMPL";
 
     AttribMap _attribs;
-    bool _persistent = false;
+    string _persistent { kwd_false };
     void parse_attribs(const Y_Node& node)
     {
         handle_dynamic_map<Attrib*>(node, _attribs, CREATE(Attrib,_attribs));
     }
     void parse_persistent(const Y_Node& node)
     {
-        _persistent = parse_static_string(node,dom_bool) == kwd_true;
+        _persistent = parse_static_string(node,dom_bool);
     }
 public:
     mdata get_mdata(string_view name)
@@ -320,6 +321,7 @@ public:
         mdata d;
         d.set(string(kwd_name),string(name));
         d.set(string(kwd_descr),_descr);
+        d.set(string(kwd_persistent),_persistent);
 
         mdata attribs {mdata::type::list};
         const auto& attrv = _attribs.as_vec();
