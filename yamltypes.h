@@ -256,6 +256,7 @@ public:
         d.set(string(kwd_has_selector),!_selector.empty());
         d.set(string(kwd_card_min),to_string(_card_min));
         d.set(string(kwd_card_max),to_string(_card_max));
+        d.set(string(kwd_persistence_type),_persistence_type);
         return d;
     }
     Attrib(const Y_Node& node, const AttribMap& attribs)
@@ -294,7 +295,7 @@ public:
         };
 
 {{#attribs}}
-    Attrib<{{type}},{{card_min}},{{card_max}}> {{name}}{{#has_selector}} { {{selector}}.get() }{{/has_selector}};
+    Attrib<{{type}},{{card_min}},{{card_max}},e_persistence_type::{{persistence_type}}> {{name}}{{#has_selector}} { {{selector}}.get() }{{/has_selector}};
 {{/attribs}}
 
     const array<BaseAttrib*,_attribcnt> _attribs {

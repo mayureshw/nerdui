@@ -23,6 +23,13 @@ enum class e_ChoiceWidget
     Button,
 };
 
+enum class e_persistence_type
+{
+    transient,
+    column,
+    blob,
+};
+
 class ErrIf
 {
     bool _has_err = false;
@@ -268,7 +275,7 @@ public:
     virtual ~BaseAttrib() = default;
 };
 
-template <typename T, int card_min, int card_max> class Attrib : public BaseAttrib
+template <typename T, int card_min, int card_max, e_persistence_type persistence_type> class Attrib : public BaseAttrib
 {
     static_assert(
         card_max == 1 || is_default_constructible_v<T>,
