@@ -186,6 +186,7 @@ outEl.addEventListener("click", (e) => {
   runQuery(url.search.slice(1));
 });
 
+statusEl.textContent = "Loading application...";
 // Load the module, then immediately make the first request with an
 // empty query string -- this mirrors a plain GET / with no params,
 // so the app renders its initial/landing state without waiting for
