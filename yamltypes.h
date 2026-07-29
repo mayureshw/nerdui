@@ -218,6 +218,7 @@ class Attrib : public YamlIf
 {
     string _descr;
     string _type;
+    bool _type_is_union;
     string _selector;
     string _persistence_type { kwd_transient };
     uint32_t _card_min = 0;
@@ -229,7 +230,7 @@ class Attrib : public YamlIf
     void parse_type(const Y_Node& node)
     {
         _type = parse_dynamic_string(node);
-        check_type_exists(node,_type);
+        _type_is_union = check_type_exists(node,_type)->is_union();
     }
     void parse_selector(const Y_Node& node, const AttribMap& attribs)
     {
@@ -244,6 +245,15 @@ class Attrib : public YamlIf
     void parse_persistence_type(const Y_Node& node)
     {
         _persistence_type = parse_static_string(node,dom_persistence_type);
+    }
+    void validate(const Y_Node& node)
+    {
+        if ( _selector.empty() and _type_is_union )
+        {
+            cerr << "For attribute of union type, selector attribute must be specified ";
+            print_err_loc(node);
+            exit(1);
+        }
     }
 public:
     mdata get_mdata(string_view name)
@@ -270,6 +280,7 @@ public:
             };
         KeySet mandatory { kwd_type };
         handle_static_map(node, hmap, mandatory);
+        validate(node);
     }
 };
 
