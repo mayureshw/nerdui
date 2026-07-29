@@ -90,7 +90,7 @@ public:
                 { kwd_choice_widget, PARSE(choice_widget) },
                 { kwd_kind, PARSE(kind) },
             };
-        KeySet mandatory { kwd_descr, kwd_values };
+        KeySet mandatory { kwd_values };
         handle_static_map(node, hmap, mandatory);
     }
 };
@@ -206,7 +206,7 @@ public:
                 { kwd_selector_typ, PARSE(selector_typ) },
                 { kwd_cases, PARSE(cases) },
             };
-        KeySet mandatory { kwd_descr, kwd_selector_typ, kwd_cases };
+        KeySet mandatory { kwd_selector_typ, kwd_cases };
         handle_static_map(node, hmap, mandatory);
     }
 };
@@ -268,7 +268,7 @@ public:
                 { kwd_selector, PARSE(selector,attribs) },
                 { kwd_persistence_type, PARSE(persistence_type) },
             };
-        KeySet mandatory { kwd_descr, kwd_type };
+        KeySet mandatory { kwd_type };
         handle_static_map(node, hmap, mandatory);
     }
 };
@@ -340,7 +340,7 @@ public:
                 { kwd_kind, PARSE(kind) },
                 { kwd_persistent, PARSE(persistent) },
             };
-        KeySet mandatory { kwd_descr, kwd_attribs };
+        KeySet mandatory { kwd_attribs };
         handle_static_map(node, hmap, mandatory);
     }
 };
