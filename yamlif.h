@@ -19,45 +19,52 @@ constexpr auto Y_Scalar    = YAML::NodeType::Scalar;
 constexpr auto Y_Null      = YAML::NodeType::Null;
 constexpr auto Y_Undefined = YAML::NodeType::Undefined;
 
-constexpr string_view kwd_constants       = "constants";
-constexpr string_view kwd_types           = "types";
-constexpr string_view kwd_domain          = "domain";
-constexpr string_view kwd_union           = "union";
-constexpr string_view kwd_structure       = "structure";
-constexpr string_view kwd_kind            = "kind";
-constexpr string_view kwd_name            = "name";
-constexpr string_view kwd_descr           = "descr";
-constexpr string_view kwd_values          = "values";
-constexpr string_view kwd_choice_widget   = "choice_widget";
-constexpr string_view kwd_selector_typ    = "selectorTyp";
-constexpr string_view kwd_selector        = "selector";
-constexpr string_view kwd_has_selector    = "has_selector";
-constexpr string_view kwd_selectorIsUnion = "selectorIsUnion";
-constexpr string_view kwd_dropdown        = "dropdown";
-constexpr string_view kwd_radio           = "radio";
-constexpr string_view kwd_button          = "button";
-constexpr string_view kwd_attribs         = "attribs";
-constexpr string_view kwd_type            = "type";
-constexpr string_view kwd_cases           = "cases";
-constexpr string_view kwd_key             = "key";
-constexpr string_view kwd_value           = "value";
-constexpr string_view kwd_card_min        = "card_min";
-constexpr string_view kwd_card_max        = "card_max";
-constexpr string_view kwd_is_last         = "is_last";
-constexpr string_view kwd_persistent      = "persistent";
-constexpr string_view kwd_true            = "true";
-constexpr string_view kwd_false           = "false";
-constexpr string_view kwd_persistence_type= "persistence_type";
-constexpr string_view kwd_transient       = "transient";
-constexpr string_view kwd_column          = "column";
-constexpr string_view kwd_blob            = "blob";
+// keywords
+constexpr string_view
+    kwd_constants        = "constants",
+    kwd_types            = "types",
+    kwd_domain           = "domain",
+    kwd_union            = "union",
+    kwd_structure        = "structure",
+    kwd_kind             = "kind",
+    kwd_name             = "name",
+    kwd_descr            = "descr",
+    kwd_values           = "values",
+    kwd_choice_widget    = "choice_widget",
+    kwd_selector_typ     = "selectorTyp",
+    kwd_selector         = "selector",
+    kwd_has_selector     = "has_selector",
+    kwd_selectorIsUnion  = "selectorIsUnion",
+    kwd_dropdown         = "dropdown",
+    kwd_radio            = "radio",
+    kwd_button           = "button",
+    kwd_attribs          = "attribs",
+    kwd_type             = "type",
+    kwd_cases            = "cases",
+    kwd_key              = "key",
+    kwd_value            = "value",
+    kwd_card_min         = "card_min",
+    kwd_card_max         = "card_max",
+    kwd_is_last          = "is_last",
+    kwd_persistent       = "persistent",
+    kwd_true             = "true",
+    kwd_false            = "false",
+    kwd_persistence_type = "persistence_type",
+    kwd_transient        = "transient",
+    kwd_column           = "column",
+    kwd_blob             = "blob",
+    kwd_String           = "String";
 
-constexpr string_view file_types_h = "types.h";
+// generated file names
+constexpr string_view
+    file_types_h = "types.h";
 
-const KeySet emptyKeySet          { };
-const KeySet dom_choice_widget    { kwd_dropdown, kwd_radio, kwd_button };
-const KeySet dom_bool             { kwd_true, kwd_false };
-const KeySet dom_persistence_type { kwd_transient, kwd_column, kwd_blob };
+// key sets
+const KeySet
+    emptyKeySet          { },
+    dom_choice_widget    { kwd_dropdown, kwd_radio, kwd_button },
+    dom_bool             { kwd_true, kwd_false },
+    dom_persistence_type { kwd_transient, kwd_column, kwd_blob };
 
 #define PARSE(NT,...) [this __VA_OPT__(,) __VA_ARGS__](const Y_Node& n){ return parse_##NT(n __VA_OPT__(,) __VA_ARGS__); }
 #define CREATE(TYP,...) [this](const Y_Node& n) { return new TYP(n __VA_OPT__(,) __VA_ARGS__); }
