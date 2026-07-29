@@ -138,7 +138,7 @@ template <typename D, typename E> class Domain : public Settable
     int index() { return static_cast<int>(_val); }
     void getInputWidget(Response& resp)
     {
-        resp.hf.text(D::_descr,": ");
+        resp.hf.text(D::_descr);
 
         if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
@@ -210,7 +210,7 @@ public:
             getInputWidget(resp);
             resp.foundInput(this);
         }
-        else resp.hf.text( descr(), ": ", vdescr() );
+        else resp.hf.text( descr(), vdescr() );
     }
 };
 
@@ -248,17 +248,16 @@ public:
     static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
-        resp.hf.p(T::_descr,":");
 
         resp.hf.ul_open();
         resp.hf.nl();
 
         for( auto attr : tinst()._attribs )
         {
-            resp.hf.li_open();
+            resp.hf.p_open();
             resp.hf.nl();
             attr->getResponse(resp);
-            resp.hf.li_close();
+            resp.hf.p_close();
             resp.hf.nl();
             if( resp.isInputFound() ) break;
         }
