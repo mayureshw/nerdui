@@ -101,7 +101,7 @@ class Settable : public Type
 {
 public:
     virtual void set(string_view)=0;
-    virtual string fieldname()=0;
+    virtual string_view fieldname()=0;
 };
 
 class Response
@@ -198,7 +198,7 @@ public:
 #endif
         markErr("Invalid value");
     }
-    string fieldname() { return D::_name; }
+    string_view fieldname() { return D::_name; }
     static bool isStruct() { return false; }
     string_view code() { return D::_codes[index()]; }
     string_view vdescr() { return D::_vdescr[index()]; }
