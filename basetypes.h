@@ -101,7 +101,7 @@ class Settable : public Type
 {
 public:
     virtual void set(string_view)=0;
-    virtual string_view fieldname()=0;
+    static inline constexpr string_view kwd_fldid = "0";
 };
 
 class Response
@@ -142,7 +142,7 @@ template <typename D, typename E> class Domain : public Settable
 
         if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
-            resp.hf.select_open(fieldname());
+            resp.hf.select_open(kwd_fldid);
             resp.hf.nl();
             for (size_t i = 0; i < D::_domainsz; i++)
             {
@@ -155,12 +155,12 @@ template <typename D, typename E> class Domain : public Settable
         {
             resp.hf.br();
             for (size_t i = 0; i < D::_domainsz; i++)
-                resp.hf.radio(fieldname(), D::_codes[i], D::_vdescr[i]);
+                resp.hf.radio(kwd_fldid, D::_codes[i], D::_vdescr[i]);
         }
         else if constexpr (D::_choice_widget == e_choice_widget::button)
         {
             for (size_t i = 0; i < D::_domainsz; i++)
-                resp.hf.button(fieldname(), D::_codes[i], D::_vdescr[i]);
+                resp.hf.button(kwd_fldid, D::_codes[i], D::_vdescr[i]);
             resp.addedButton();
         }
         resp.hf.nl();
@@ -198,7 +198,6 @@ public:
 #endif
         markErr("Invalid value");
     }
-    string_view fieldname() { return D::_name; }
     static bool isStruct() { return false; }
     string_view code() { return D::_codes[index()]; }
     string_view vdescr() { return D::_vdescr[index()]; }
