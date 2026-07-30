@@ -13,12 +13,19 @@ protected:
     }
     void parse_kind(const Y_Node& node) {}
 public:
-    virtual mdata get_mdata(string_view name)=0;
+    virtual mdata get_mdata(string_view name)
+    {
+        mdata d;
+        return d;
+    }
     virtual void render_types_h(string_view name, ostream& os)
     {
         render_tmpl(get_tmpl_types_h(),get_mdata(name),os);
     }
-    virtual string_view get_tmpl_types_h()=0;
+    virtual string_view get_tmpl_types_h()
+    {
+        return "";
+    }
     virtual bool is_union() { return false; }
     virtual ~Type() {}
 };
