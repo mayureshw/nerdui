@@ -95,7 +95,7 @@ public:
         {
             auto sessionid = query[kwd_sessionid];
             auto it = _sessions.find(sessionid);
-            if( it == _sessions.end() ) return "<p>invalid session<p>";
+            if( it == _sessions.end() ) return "<p>invalid session</p>";
             else return it->second->getResponse(query);
         }
         else
