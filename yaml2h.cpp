@@ -77,6 +77,10 @@ using DefaultSessionType = {{default_session}};
         render_tmpl(_sessions_tmpl,get_const_mdata(),os);
         render_tmpl(_tail_tmpl,blankd,os);
     }
+    void registerBuiltinTypes()
+    {
+        _types.emplace( kwd_String, new Type() );
+    }
 public:
     void render()
     {
@@ -94,6 +98,10 @@ public:
             cerr << path << ": " << e.what() << endl;
             exit(1);
         }
+    }
+    YamlSpec()
+    {
+        registerBuiltinTypes();
     }
     ~YamlSpec()
     {
