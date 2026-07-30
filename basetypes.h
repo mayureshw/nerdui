@@ -142,7 +142,7 @@ template <typename D, typename E> class Domain : public Settable
 
         if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
-            resp.hf.select_open(D::_name);
+            resp.hf.select_open(fieldname());
             resp.hf.nl();
             for (size_t i = 0; i < D::_domainsz; i++)
             {
@@ -155,12 +155,12 @@ template <typename D, typename E> class Domain : public Settable
         {
             resp.hf.br();
             for (size_t i = 0; i < D::_domainsz; i++)
-                resp.hf.radio(D::_name, D::_codes[i], D::_vdescr[i]);
+                resp.hf.radio(fieldname(), D::_codes[i], D::_vdescr[i]);
         }
         else if constexpr (D::_choice_widget == e_choice_widget::button)
         {
             for (size_t i = 0; i < D::_domainsz; i++)
-                resp.hf.button(D::_name, D::_codes[i], D::_vdescr[i]);
+                resp.hf.button(fieldname(), D::_codes[i], D::_vdescr[i]);
             resp.addedButton();
         }
         resp.hf.nl();
