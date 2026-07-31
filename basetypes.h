@@ -99,6 +99,8 @@ public:
 
 class Settable : public Type
 {
+protected:
+    bool _is_set = false;
 public:
     virtual void set(string_view)=0;
     static inline constexpr string_view kwd_fldid = "0";
@@ -131,11 +133,44 @@ public:
     string str() { return _resp.str(); }
 };
 
-template <typename D, typename E> class Domain : public Settable
+class ElementaryType : public Settable
+{
+public:
+    static bool isStruct() { return false; }
+    virtual void getInputWidget(Response&)=0;
+    virtual void getPreview(Response&)=0;
+    void getResponse(Response& resp)
+    {
+        if ( not _is_set )
+        {
+            getInputWidget(resp);
+            resp.foundInput(this);
+        }
+        else getPreview(resp);
+    }
+};
+
+class String : public ElementaryType
+{
+    string _val;
+public:
+    void set(string_view val) { _val = val; }
+    void getInputWidget(Response& resp) {}
+    void getPreview(Response& resp) {}
+};
+
+template <typename D, typename E> class Domain : public ElementaryType
 {
     E _val;
-    bool _is_set = false;
     int index() { return static_cast<int>(_val); }
+    void _set(E eval)
+    {
+        _val = eval;
+        _is_set = true;
+        clearErr();
+    }
+public:
+    E val() { return _val; }
     void getInputWidget(Response& resp)
     {
         resp.hf.text(D::_descr);
@@ -165,14 +200,10 @@ template <typename D, typename E> class Domain : public Settable
         }
         resp.hf.nl();
     }
-    void _set(E eval)
+    void getPreview(Response& resp)
     {
-        _val = eval;
-        _is_set = true;
-        clearErr();
+        resp.hf.text( descr(), vdescr() );
     }
-public:
-    E val() { return _val; }
     void set(string_view val)
     {
         // frozen's hash is seen not working on wasm
@@ -198,19 +229,9 @@ public:
 #endif
         markErr("Invalid value");
     }
-    static bool isStruct() { return false; }
     string_view code() { return D::_codes[index()]; }
     string_view vdescr() { return D::_vdescr[index()]; }
     string_view descr() { return D::_descr; }
-    void getResponse(Response& resp)
-    {
-        if ( not _is_set )
-        {
-            getInputWidget(resp);
-            resp.foundInput(this);
-        }
-        else resp.hf.text( descr(), vdescr() );
-    }
 };
 
 template <typename T, typename SelectorType, typename... UnionOf> class Union : public Type
