@@ -263,9 +263,11 @@ class Attrib : public YamlIf
         }
     }
 public:
-    mdata get_mdata(string_view name)
+    mdata get_mdata(string_view name, string_view contained_in, size_t ordpos)
     {
         mdata d;
+        d.set(string(kwd_contained_in),string(contained_in));
+        d.set(string(kwd_ordpos),to_string(ordpos));
         d.set(string(kwd_name),string(name));
         d.set(string(kwd_descr),_descr);
         d.set(string(kwd_type),_type);
@@ -313,7 +315,7 @@ public:
         };
 
 {{#attribs}}
-    Attrib<{{type}},{{card_min}},{{card_max}},e_persistence_type::{{persistence_type}}> {{name}}{{#has_selector}} { {{selector}}.get() }{{/has_selector}};
+    Attrib<{{contained_in}},{{ordpos}},{{type}},{{card_min}},{{card_max}},e_persistence_type::{{persistence_type}}> {{name}}{{#has_selector}} { {{selector}}.get() }{{/has_selector}};
 {{/attribs}}
 
     const array<BaseAttrib*,_attribcnt> _attribs {
@@ -344,7 +346,9 @@ public:
 
         mdata attribs {mdata::type::list};
         const auto& attrv = _attribs.as_vec();
-        for (const auto& a : attrv) attribs << a->second->get_mdata(a->first);
+        size_t ordpos = 0;
+        for (const auto& a : attrv)
+            attribs << a->second->get_mdata(a->first,name,ordpos++);
         d.set(string(kwd_attribs),attribs);
         return d;
     }

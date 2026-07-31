@@ -53,7 +53,9 @@ constexpr string_view
     kwd_transient        = "transient",
     kwd_column           = "column",
     kwd_blob             = "blob",
-    kwd_String           = "String";
+    kwd_String           = "String",
+    kwd_contained_in     = "contained_in",
+    kwd_ordpos           = "ordpos";
 
 // generated file names
 constexpr string_view
