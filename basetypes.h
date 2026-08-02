@@ -32,6 +32,10 @@ enum class e_persistence_type
     blob,
 };
 
+
+// Placeholder type
+class NoneType {};
+
 class ErrIf
 {
     bool _has_err = false;
@@ -93,6 +97,7 @@ class ElementaryType : public Settable
 public:
     virtual void getInputWidget(Response&)=0;
     virtual void getPreview(Response&)=0;
+    template<typename ContainedIn, size_t ordpos>
     void getResponse(Response& resp)
     {
         if ( not _is_set )
@@ -188,27 +193,30 @@ public:
     string_view descr() { return D::_descr; }
 };
 
-template <typename T, typename SelectorType, typename... UnionOf> class Union : public Type
+template <typename T, typename SelectorType, typename... UnionOf>
+class Union : public Type
 {
     T& tinst() { return static_cast<T&>(*this); }
 protected:
     SelectorType& _selector;
 public:
     variant<monostate,UnionOf...> _u;
+    template<typename ContainedIn, size_t ordpos>
     void getResponse(Response& resp)
     {
         return tinst().dispatch(
             [this,&resp]<typename VT>() {
-            this->template getResponseImpl<VT>(resp);
+            this->template getResponseImpl<ContainedIn,ordpos,VT>(resp);
             });
     }
-    template<typename VT> void getResponseImpl(Response& resp)
+    template<typename ContainedIn, size_t ordpos, typename VT>
+    void getResponseImpl(Response& resp)
     {
         if constexpr ( not is_same_v<VT,monostate> )
         {
             if (!holds_alternative<VT>(_u)) _u.template emplace<VT>();
             auto& v = get<VT>(_u);
-            v.getResponse(resp);
+            v.template getResponse<ContainedIn,ordpos>(resp);
         }
     }
     Union(SelectorType& selector) : _selector(selector) {}
@@ -218,6 +226,7 @@ template <typename T> class Struct : public Type
 {
     T& tinst() { return static_cast<T&>(*this); }
 public:
+    template<typename ContainedIn, size_t ordpos>
     void getResponse(Response& resp)
     {
 
@@ -232,7 +241,7 @@ public:
             ([&](auto&& a) {
                 resp.hf.p_open();
                 resp.hf.nl();
-                a.getResponse(resp);
+                a.template getResponse<NoneType,0>(resp);
                 resp.hf.p_close();
                 resp.hf.nl();
                 return not resp.isInputFound();
@@ -251,7 +260,7 @@ template <
     size_t card_min,
     size_t card_max,
     e_persistence_type persistence_type>
-class Attrib //: public BaseAttrib
+class Attrib
 {
     static_assert(
         card_max == 1 || is_default_constructible_v<T>,
@@ -269,10 +278,11 @@ class Attrib //: public BaseAttrib
 
     AttrTyp _val;
 public:
+    template<typename ContainedInParent, size_t ordposParent>
     void getResponse(Response& resp)
     {
         static_assert( is_scalar, "getResponse not implemented for vectors" );
-        _val.getResponse(resp);
+        _val.template getResponse<ContainedIn,ordpos>(resp);
     }
     T& get() requires (card_max == 1) { return _val; }
     const T& get() const requires (card_max == 1) { return _val; }

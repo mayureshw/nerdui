@@ -64,7 +64,7 @@ public:
         updateState(query);
         kainjow::mustache::data data;
         data.set(kwd_sessionid, _sessionid);
-        _sessionobj->getResponse(_resp);
+        _sessionobj->getResponse<NoneType,0>(_resp);
         data.set(kwd_form,_resp.str());
         data.set(kwd_havebutton,_resp.haveButton());
         _resp.clear();
