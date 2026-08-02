@@ -317,12 +317,10 @@ public:
 {{#attribs}}
     Attrib<{{contained_in}},{{ordpos}},{{type}},{{card_min}},{{card_max}},e_persistence_type::{{persistence_type}}> {{name}}{{#has_selector}} { {{selector}}.get() }{{/has_selector}};
 {{/attribs}}
-
-    const array<BaseAttrib*,_attribcnt> _attribs {
-        {{#attribs}}
-        &{{name}},
-        {{/attribs}}
-        };
+    auto attributes()
+    {
+        return tie({{#attribs}}{{name}}{{^is_last}},{{/is_last}}{{/attribs}});
+    }
 };
 )TMPL";
 
@@ -348,7 +346,11 @@ public:
         const auto& attrv = _attribs.as_vec();
         size_t ordpos = 0;
         for (const auto& a : attrv)
-            attribs << a->second->get_mdata(a->first,name,ordpos++);
+        {
+            auto attrd = a->second->get_mdata(a->first,name,ordpos++);
+            attrd.set(string(kwd_is_last),ordpos == attrv.size());
+            attribs << attrd;
+        }
         d.set(string(kwd_attribs),attribs);
         return d;
     }

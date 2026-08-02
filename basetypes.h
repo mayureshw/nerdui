@@ -7,6 +7,7 @@
 #include <iostream>
 #include <array>
 #include <variant>
+#include <tuple>
 #include <frozen/unordered_map.h>
 #include <frozen/string.h>
 using namespace std;
@@ -136,7 +137,6 @@ public:
 class ElementaryType : public Settable
 {
 public:
-    static bool isStruct() { return false; }
     virtual void getInputWidget(Response&)=0;
     virtual void getPreview(Response&)=0;
     void getResponse(Response& resp)
@@ -241,7 +241,6 @@ protected:
     SelectorType& _selector;
 public:
     variant<monostate,UnionOf...> _u;
-    static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
         return tinst().dispatch(
@@ -265,36 +264,40 @@ template <typename T> class Struct : public Type
 {
     T& tinst() { return static_cast<T&>(*this); }
 public:
-    static bool isStruct() { return true; }
     void getResponse(Response& resp)
     {
 
         resp.hf.ul_open();
         resp.hf.nl();
 
-        for( auto attr : tinst()._attribs )
+        auto attribs_tup = tinst().attributes();
+
+        apply([&](auto&... attr)
         {
-            resp.hf.p_open();
-            resp.hf.nl();
-            attr->getResponse(resp);
-            resp.hf.p_close();
-            resp.hf.nl();
-            if( resp.isInputFound() ) break;
-        }
+            // fold expr on &&, so that it breaks when response is found
+            ([&](auto&& a) {
+                resp.hf.p_open();
+                resp.hf.nl();
+                a.getResponse(resp);
+                resp.hf.p_close();
+                resp.hf.nl();
+                return not resp.isInputFound();
+            }(attr) && ...);
+        }, attribs_tup );
+
         resp.hf.ul_close();
         resp.hf.nl();
     }
 };
 
-class BaseAttrib
-{
-public:
-    virtual void getResponse(Response& resp)=0;
-    virtual bool isStruct()=0;
-    virtual ~BaseAttrib() = default;
-};
-
-template <typename T, int card_min, int card_max, e_persistence_type persistence_type> class Attrib : public BaseAttrib
+template <
+    typename ContainedIn,
+    size_t ordpos,
+    typename T,
+    size_t card_min,
+    size_t card_max,
+    e_persistence_type persistence_type>
+class Attrib //: public BaseAttrib
 {
     static_assert(
         card_max == 1 || is_default_constructible_v<T>,
@@ -317,7 +320,6 @@ public:
         static_assert( is_scalar, "getResponse not implemented for vectors" );
         _val.getResponse(resp);
     }
-    bool isStruct() { return AttrTyp::isStruct(); }
     T& get() requires (card_max == 1) { return _val; }
     const T& get() const requires (card_max == 1) { return _val; }
 
