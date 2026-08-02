@@ -153,7 +153,8 @@ public:
     E val() { return _val; }
     void getInputWidget(Response& resp, string_view adescr)
     {
-        resp.hf.text(adescr);
+        resp.hf.tag_open(kwd_label,{kwd_field});
+        resp.hf.span(adescr);
 
         if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
@@ -180,6 +181,7 @@ public:
             resp.hf.tag_close(kwd_div);
             resp.addedButton();
         }
+        resp.hf.tag_close(kwd_label);
         resp.hf.nl();
     }
     string_view get_value_view() { return vdescr(); }

@@ -20,8 +20,6 @@ public:
     void ul_close() { _os << "</ul>"; }
     void p_open() { _os << "<p>"; }
     void p_close() { _os << "</p>"; }
-    void span_open() { _os << "<span>"; }
-    void span_close() { _os << "</span>"; }
     template <typename... Args> void p(Args&&... args)
     { p_open(); text(std::forward<Args>(args)...); p_close(); }
     void select_open(string_view name) { _os << "<select name=\"" << name << "\">"; }
@@ -32,6 +30,12 @@ public:
     {
         _os << " class=\"";
         for(auto c:classes) _os << c << " ";
+    }
+    void span(string_view text)
+    {
+        _os << "<span>"
+            << text
+            << "</span>";
     }
     void radio(string_view name, string_view code, string_view s)
     {
@@ -48,9 +52,7 @@ public:
     void textinput(string_view label, string_view name)
     {
         tag_open(kwd_label,{kwd_field});
-        span_open();
-        _os << label;
-        span_close();
+        span(label);
         _os << "<input type=\"text\" name=\""
             << name
             << "\"> ";
