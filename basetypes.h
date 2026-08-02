@@ -95,17 +95,18 @@ public:
 class ElementaryType : public Settable
 {
 public:
-    virtual void getInputWidget(Response&)=0;
-    virtual void getPreview(Response&)=0;
+    virtual void getInputWidget(Response&,string_view)=0;
+    virtual void getPreview(Response&,string_view)=0;
     template<typename ContainedIn, size_t ordpos>
     void getResponse(Response& resp)
     {
+        constexpr string_view adescr = ContainedIn::_adescr[ordpos];
         if ( not _is_set )
         {
-            getInputWidget(resp);
+            getInputWidget(resp,adescr);
             resp.foundInput(this);
         }
-        else getPreview(resp);
+        else getPreview(resp,adescr);
     }
 };
 
@@ -114,8 +115,8 @@ class String : public ElementaryType
     string _val;
 public:
     void set(string_view val) { _val = val; }
-    void getInputWidget(Response& resp) {}
-    void getPreview(Response& resp) {}
+    void getInputWidget(Response& resp, string_view adescr) {}
+    void getPreview(Response& resp, string_view adescr) {}
 };
 
 template <typename D, typename E> class Domain : public ElementaryType
@@ -130,9 +131,9 @@ template <typename D, typename E> class Domain : public ElementaryType
     }
 public:
     E val() { return _val; }
-    void getInputWidget(Response& resp)
+    void getInputWidget(Response& resp, string_view adescr)
     {
-        resp.hf.text(D::_descr," ");
+        resp.hf.text(adescr);
 
         if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
@@ -159,9 +160,9 @@ public:
         }
         resp.hf.nl();
     }
-    void getPreview(Response& resp)
+    void getPreview(Response& resp, string_view adescr)
     {
-        resp.hf.text( descr(), " : ", vdescr() );
+        resp.hf.text( adescr, " : ", vdescr() );
     }
     void set(string_view val)
     {
