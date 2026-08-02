@@ -10,3 +10,30 @@
     align-items: center;
     gap: 0.5em;
 }
+
+button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5em 1em;
+    cursor: pointer;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    color: #222;
+    font-size: 16px;
+}
+
+.button:hover {
+    background: #1d4ed8;
+}
+
+.field-name {
+    color: #666;
+}
+
+.field-value {
+    color: #111;
+}
