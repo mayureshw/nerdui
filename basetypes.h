@@ -127,7 +127,7 @@ public:
     E val() { return _val; }
     void getInputWidget(Response& resp)
     {
-        resp.hf.text(D::_descr);
+        resp.hf.text(D::_descr," ");
 
         if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
@@ -156,7 +156,7 @@ public:
     }
     void getPreview(Response& resp)
     {
-        resp.hf.text( descr(), vdescr() );
+        resp.hf.text( descr(), " : ", vdescr() );
     }
     void set(string_view val)
     {
