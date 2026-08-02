@@ -96,7 +96,11 @@ class ElementaryType : public Settable
 {
 public:
     virtual void getInputWidget(Response&,string_view)=0;
-    virtual void getPreview(Response&,string_view)=0;
+    virtual string_view get_value_view()=0;
+    void getPreview(Response& resp, string_view adescr)
+    {
+        resp.hf.text( adescr, " : ", get_value_view() );
+    }
     template<typename ContainedIn, size_t ordpos>
     void getResponse(Response& resp)
     {
@@ -114,9 +118,17 @@ class String : public ElementaryType
 {
     string _val;
 public:
-    void set(string_view val) { _val = val; }
-    void getInputWidget(Response& resp, string_view adescr) {}
-    void getPreview(Response& resp, string_view adescr) {}
+    void set(string_view val)
+    {
+        _val = val;
+        _is_set = true;
+        clearErr();
+    }
+    void getInputWidget(Response& resp, string_view adescr)
+    {
+        resp.hf.textinput(adescr,kwd_fldid);
+    }
+    string_view get_value_view() { return _val; }
 };
 
 template <typename D, typename E> class Domain : public ElementaryType
@@ -160,10 +172,7 @@ public:
         }
         resp.hf.nl();
     }
-    void getPreview(Response& resp, string_view adescr)
-    {
-        resp.hf.text( adescr, " : ", vdescr() );
-    }
+    string_view get_value_view() { return vdescr(); }
     void set(string_view val)
     {
         // frozen's hash is seen not working on wasm

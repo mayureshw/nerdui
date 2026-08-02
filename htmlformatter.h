@@ -34,6 +34,16 @@ public:
             << "</label>";
         br();
     }
+    void textinput(string_view label, string_view name)
+    {
+        _os << "<label>"
+            << label
+            << "<input type=\"text\" name=\""
+            << name
+            << "\"> "
+            << "</label>";
+        br();
+    }
     void button(string_view name, string_view code, string_view descr)
     {
         _os << "<button type=\"submit\" name=\""
