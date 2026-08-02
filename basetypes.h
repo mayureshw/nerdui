@@ -10,7 +10,16 @@
 #include <tuple>
 #include <frozen/unordered_map.h>
 #include <frozen/string.h>
+
 using namespace std;
+
+constexpr string_view
+    kwd_fldid   = "0",
+    kwd_buttons = "buttons",
+    kwd_field   = "field",
+    kwd_label   = "label",
+    kwd_div     = "div";
+
 #include "htmlformatter.h"
 
 // Common pattern to use with visit
@@ -62,7 +71,6 @@ protected:
     bool _is_set = false;
 public:
     virtual void set(string_view)=0;
-    static inline constexpr string_view kwd_fldid = "0";
 };
 
 class Response
@@ -166,8 +174,10 @@ public:
         }
         else if constexpr (D::_choice_widget == e_choice_widget::button)
         {
+            resp.hf.tag_open(kwd_div,{kwd_buttons});
             for (size_t i = 0; i < D::_domainsz; i++)
                 resp.hf.button(kwd_fldid, D::_codes[i], D::_vdescr[i]);
+            resp.hf.tag_close(kwd_div);
             resp.addedButton();
         }
         resp.hf.nl();
@@ -239,12 +249,7 @@ public:
     template<typename ContainedIn, size_t ordpos>
     void getResponse(Response& resp)
     {
-
-        resp.hf.ul_open();
-        resp.hf.nl();
-
         auto attribs_tup = tinst().attributes();
-
         apply([&](auto&... attr)
         {
             // fold expr on &&, so that it breaks when response is found
@@ -257,9 +262,6 @@ public:
                 return not resp.isInputFound();
             }(attr) && ...);
         }, attribs_tup );
-
-        resp.hf.ul_close();
-        resp.hf.nl();
     }
 };
 

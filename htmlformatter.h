@@ -1,6 +1,10 @@
 #ifndef _HTML_FORMATTER_H_
 #define _HTML_FORMATTER_H_
 
+#include <list>
+
+using namespace std;
+
 class HtmlFormatter
 {
     ostream& _os;
@@ -16,12 +20,19 @@ public:
     void ul_close() { _os << "</ul>"; }
     void p_open() { _os << "<p>"; }
     void p_close() { _os << "</p>"; }
+    void span_open() { _os << "<span>"; }
+    void span_close() { _os << "</span>"; }
     template <typename... Args> void p(Args&&... args)
     { p_open(); text(std::forward<Args>(args)...); p_close(); }
     void select_open(string_view name) { _os << "<select name=\"" << name << "\">"; }
     void select_close() { _os << "</select>"; }
     void option(string_view code, string_view s)
     { _os << "<option value=\"" << code << "\">" << s << "</option>"; }
+    void write_classes(list<string_view> classes)
+    {
+        _os << " class=\"";
+        for(auto c:classes) _os << c << " ";
+    }
     void radio(string_view name, string_view code, string_view s)
     {
         _os << "<label>"
@@ -36,12 +47,14 @@ public:
     }
     void textinput(string_view label, string_view name)
     {
-        _os << "<label>"
-            << label
-            << "<input type=\"text\" name=\""
+        tag_open(kwd_label,{kwd_field});
+        span_open();
+        _os << label;
+        span_close();
+        _os << "<input type=\"text\" name=\""
             << name
-            << "\"> "
-            << "</label>";
+            << "\"> ";
+        tag_close(kwd_label);
         br();
     }
     void button(string_view name, string_view code, string_view descr)
@@ -54,6 +67,13 @@ public:
             << descr
             << "</button>";
     }
+    void tag_open(string_view tag, list<string_view> classes={})
+    {
+        _os << "<" << tag;
+        write_classes(classes);
+        _os << "\">";
+    }
+    void tag_close(string_view tag) { _os << "</" << tag << ">"; }
     HtmlFormatter(ostream& os) : _os(os) {}
 };
 

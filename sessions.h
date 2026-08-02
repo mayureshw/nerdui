@@ -54,7 +54,7 @@ class Session
     {
         auto settable = _resp.settable();
         if ( not settable ) return;
-        auto fieldname = string(Settable::kwd_fldid);
+        auto fieldname = string(kwd_fldid);
         if ( query.contains(fieldname) ) settable->set(query[fieldname]);
     }
 public:
