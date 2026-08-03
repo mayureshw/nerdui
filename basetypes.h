@@ -158,7 +158,7 @@ public:
     void getInputWidget(Response& resp, string_view adescr)
     {
         resp.hf.tag_open(kwd_label,{kwd_field});
-        resp.hf.span(adescr);
+        resp.hf.fieldname( adescr );
 
         if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
