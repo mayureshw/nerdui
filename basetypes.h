@@ -94,7 +94,11 @@ public:
     void unsetPrev()
     {
         if ( _last_settable != nullptr )
+        {
             _last_settable->unset();
+            _settable = _last_settable;
+            _last_settable = nullptr;
+        }
     }
     void clear()
     {
