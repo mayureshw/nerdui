@@ -21,7 +21,11 @@ constexpr string_view
     kwd_field_value = "fiela-valued",
     kwd_label       = "label",
     kwd_div         = "div",
-    kwd_span        = "span";
+    kwd_span        = "span",
+    kwd_action      = "action",
+    kwd_back        = "Back",
+    kwd_next        = "Next",
+    kwd_empty       = "";
 
 #include "htmlformatter.h"
 
@@ -81,6 +85,7 @@ class Response
     ostringstream _resp;
     bool _found_input = false;
     Settable *_settable = nullptr;
+    Settable *_last_settable = nullptr;
     bool _have_button = false;
 public:
     HtmlFormatter hf {_resp};
@@ -94,13 +99,24 @@ public:
     }
     void foundInput(Settable *settable)
     {
+        _last_settable = _settable;
         _settable = settable;
         _found_input = true;
     }
     void addedButton() { _have_button = true; }
-    bool haveButton() { return _have_button; }
     bool isInputFound() { return _found_input; }
     string str() { return _resp.str(); }
+    void buttons()
+    {
+        hf.tag_open(kwd_div,{kwd_buttons});
+        if ( _last_settable != nullptr )
+            hf.button(kwd_back,kwd_empty,kwd_back);
+        if ( isInputFound() )
+            hf.button(kwd_next,kwd_empty,kwd_next);
+        // else Save? But it's not always save. Need logic for the last button.
+        //     hf.button();
+        hf.tag_close(kwd_buttons);
+    }
 };
 
 class ElementaryType : public Settable

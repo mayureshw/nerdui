@@ -7,7 +7,6 @@
 
 inline const string kwd_sessionid = "sessionid";
 inline const string kwd_form = "form";
-inline const string kwd_havebutton = "havebutton";
 
 constexpr char resp[] = R"(
 <!DOCTYPE html>
@@ -18,11 +17,8 @@ constexpr char resp[] = R"(
 <body>
 
 <form method="post" action="">
-    {{{form}}}
     <input type="hidden" name="sessionid" value="{{sessionid}}">
-{{^havebutton}}
-    <button type="submit">Next</button>
-{{/havebutton}}
+    {{{form}}}
 </form>
 
 </body>
@@ -65,8 +61,8 @@ public:
         kainjow::mustache::data data;
         data.set(kwd_sessionid, _sessionid);
         _sessionobj->getResponse<NoneType,0>(_resp);
+        _resp.buttons();
         data.set(kwd_form,_resp.str());
-        data.set(kwd_havebutton,_resp.haveButton());
         _resp.clear();
         return tmpl_resp().render(data);
     }
