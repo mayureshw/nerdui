@@ -18,7 +18,7 @@ constexpr string_view
     kwd_buttons     = "buttons",
     kwd_field       = "field",
     kwd_field_name  = "field-name",
-    kwd_field_value = "fiela-valued",
+    kwd_field_value = "field-value",
     kwd_label       = "label",
     kwd_div         = "div",
     kwd_span        = "span",
