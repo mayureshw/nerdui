@@ -23,6 +23,23 @@ button:focus-visible {
     box-shadow: 0 0 0 3px #93c5fd;
 }
 
+select {
+    font: inherit;
+    color: #111;
+    background: white;
+
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+
+    padding: 0.35em 2em 0.35em 0.6em;
+}
+
+select:focus-visible {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px #bfdbfe;
+}
+
 body {
     font-family: system-ui, sans-serif;
     color: #222;
@@ -36,7 +53,7 @@ body {
 }
 
 .field-name {
-    color: #666;
+    color: #365f91;
 }
 
 .field-value {
