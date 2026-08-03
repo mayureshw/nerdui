@@ -5,12 +5,6 @@
     gap: 10px;
 }
 
-.field {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5em;
-}
-
 button {
     background-color: #2563eb;
     color: white;
@@ -20,14 +14,25 @@ button {
     cursor: pointer;
 }
 
+button:hover {
+    background: #1d4ed8;
+}
+
+button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px #93c5fd;
+}
+
 body {
     font-family: system-ui, sans-serif;
     color: #222;
     font-size: 16px;
 }
 
-button:hover {
-    background: #1d4ed8;
+.field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
 }
 
 .field-name {
