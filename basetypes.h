@@ -78,6 +78,7 @@ protected:
     bool _is_set = false;
 public:
     virtual void set(string_view)=0;
+    void unset() { _is_set = false; }
 };
 
 class Response
@@ -90,6 +91,11 @@ class Response
 public:
     HtmlFormatter hf {_resp};
     Settable* settable() { return _settable; }
+    void unsetPrev()
+    {
+        if ( _last_settable != nullptr )
+            _last_settable->unset();
+    }
     void clear()
     {
         _resp.str("");
@@ -97,9 +103,12 @@ public:
         _found_input = false;
         _have_button = false;
     }
+    void setLast(Settable *settable)
+    {
+        _last_settable = settable;
+    }
     void foundInput(Settable *settable)
     {
-        _last_settable = _settable;
         _settable = settable;
         _found_input = true;
     }
@@ -111,7 +120,7 @@ public:
         hf.tag_open(kwd_div,{kwd_buttons});
         if ( _last_settable != nullptr )
             hf.button(kwd_back,kwd_empty,kwd_back);
-        if ( isInputFound() )
+        if ( not _have_button and isInputFound() )
             hf.button(kwd_next,kwd_empty,kwd_next);
         // else Save? But it's not always save. Need logic for the last button.
         //     hf.button();
@@ -138,7 +147,11 @@ public:
             getInputWidget(resp,adescr);
             resp.foundInput(this);
         }
-        else getPreview(resp,adescr);
+        else
+        {
+            getPreview(resp,adescr);
+            resp.setLast(this);
+        }
     }
 };
 

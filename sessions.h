@@ -57,7 +57,9 @@ public:
     string& id() { return _sessionid; }
     string getResponse(Query& query)
     {
-        updateState(query);
+        if ( query.contains(string(kwd_back)) )
+            _resp.unsetPrev();
+        else updateState(query);
         kainjow::mustache::data data;
         data.set(kwd_sessionid, _sessionid);
         _sessionobj->getResponse<NoneType,0>(_resp);
