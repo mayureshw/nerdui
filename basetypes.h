@@ -14,11 +14,14 @@
 using namespace std;
 
 constexpr string_view
-    kwd_fldid   = "0",
-    kwd_buttons = "buttons",
-    kwd_field   = "field",
-    kwd_label   = "label",
-    kwd_div     = "div";
+    kwd_fldid       = "0",
+    kwd_buttons     = "buttons",
+    kwd_field       = "field",
+    kwd_field_name  = "field-name",
+    kwd_field_value = "fiela-valued",
+    kwd_label       = "label",
+    kwd_div         = "div",
+    kwd_span        = "span";
 
 #include "htmlformatter.h"
 
@@ -107,7 +110,8 @@ public:
     virtual string_view get_value_view()=0;
     void getPreview(Response& resp, string_view adescr)
     {
-        resp.hf.text( adescr, " : ", get_value_view() );
+        resp.hf.fieldname( adescr );
+        resp.hf.fieldvalue( get_value_view() );
     }
     template<typename ContainedIn, size_t ordpos>
     void getResponse(Response& resp)

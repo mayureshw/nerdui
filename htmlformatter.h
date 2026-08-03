@@ -21,7 +21,7 @@ public:
     void p_open() { _os << "<p>"; }
     void p_close() { _os << "</p>"; }
     template <typename... Args> void p(Args&&... args)
-    { p_open(); text(std::forward<Args>(args)...); p_close(); }
+    { text(std::forward<Args>(args)...); }
     void select_open(string_view name) { _os << "<select name=\"" << name << "\">"; }
     void select_close() { _os << "</select>"; }
     void option(string_view code, string_view s)
@@ -52,7 +52,7 @@ public:
     void textinput(string_view label, string_view name)
     {
         tag_open(kwd_label,{kwd_field});
-        span(label);
+        fieldname(label);
         _os << "<input type=\"text\" name=\""
             << name
             << "\"> ";
@@ -76,6 +76,18 @@ public:
         _os << "\">";
     }
     void tag_close(string_view tag) { _os << "</" << tag << ">"; }
+    void fieldname(string_view fieldname)
+    {
+        tag_open(kwd_span,{kwd_field_name});
+        text( fieldname, " : " );
+        tag_close(kwd_span);
+    }
+    void fieldvalue(string_view fieldvalue)
+    {
+        tag_open(kwd_span,{kwd_field_value});
+        text( fieldvalue );
+        tag_close(kwd_span);
+    }
     HtmlFormatter(ostream& os) : _os(os) {}
 };
 
