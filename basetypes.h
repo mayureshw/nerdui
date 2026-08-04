@@ -25,6 +25,7 @@ constexpr string_view
     kwd_action      = "action",
     kwd_back        = "Back",
     kwd_next        = "Next",
+    kwd_done        = "Done",
     kwd_empty       = "";
 
 #include "htmlformatter.h"
@@ -72,6 +73,9 @@ public:
 
 class Type : public ErrIf {};
 
+// When adding arrays, probably we should treat Attrib as the settable
+// Then whole array can be seen as one editing step, with its own buttons
+// like Add, Delete and Edit. Back on an array will take to its previous field
 class Settable : public Type
 {
 protected:
@@ -96,16 +100,23 @@ public:
         if ( _last_settable != nullptr )
         {
             _last_settable->unset();
-            _settable = _last_settable;
             _last_settable = nullptr;
         }
     }
+    // clear after sending every response
     void clear()
     {
         _resp.str("");
         _resp.clear();
         _found_input = false;
         _have_button = false;
+    }
+    // reset after resetting a session
+    // clear would be called by the previous response, no need to repeat
+    void reset()
+    {
+        _settable = nullptr;
+        _last_settable = nullptr;
     }
     void setLast(Settable *settable)
     {
@@ -124,10 +135,13 @@ public:
         hf.tag_open(kwd_div,{kwd_buttons});
         if ( _last_settable != nullptr )
             hf.button(kwd_back,kwd_empty,kwd_back);
-        if ( not _have_button and isInputFound() )
-            hf.button(kwd_next,kwd_empty,kwd_next);
-        // else Save? But it's not always save. Need logic for the last button.
-        //     hf.button();
+        if ( not _have_button )
+        {
+            if ( isInputFound() )
+                hf.button(kwd_next,kwd_empty,kwd_next);
+            else
+                hf.button(kwd_done,kwd_empty,kwd_done);
+        }
         hf.tag_close(kwd_buttons);
     }
 };

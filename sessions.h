@@ -59,6 +59,13 @@ public:
     {
         if ( query.contains(string(kwd_back)) )
             _resp.unsetPrev();
+        else if ( query.contains(string(kwd_done)) )
+        {
+            // Shall we really do memory op or recycle existing object
+            delete _sessionobj;
+            _sessionobj = new DefaultSessionType();
+            _resp.reset();
+        }
         else updateState(query);
         kainjow::mustache::data data;
         data.set(kwd_sessionid, _sessionid);
