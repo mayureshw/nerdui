@@ -238,27 +238,12 @@ public:
     string_view get_value_view() { return vdescr(); }
     void set(string_view val)
     {
-        // frozen's hash is seen not working on wasm
-        // consider replacing frozen with gperf generated code
-        // consider filing a bug report
-        // sequential search is a stop gap (ok for small domains)
-#ifdef WASM
-        for( const auto& [k,v]: D::_codeval )
-        {
-            if ( k == val )
-            {
-                _set(v);
-                return;
-            }
-        }
-#else
         auto it = D::_codeval.find(val);
-        if ( it == D::_codeval.end() )
+        if ( it != D::_codeval.end() )
         {
             _set(it->second);
             return;
         }
-#endif
         markErr("Invalid value");
     }
     string_view code() { return D::_codes[index()]; }
