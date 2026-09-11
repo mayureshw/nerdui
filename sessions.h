@@ -48,10 +48,10 @@ class Session
     }
     void updateState(Query& query)
     {
-        auto settable = _resp.settable();
-        if ( not settable ) return;
+        auto eh = _resp.eh();
+        if ( not eh ) return;
         auto fieldname = string(kwd_fldid);
-        if ( query.contains(fieldname) ) settable->set(query[fieldname]);
+        if ( query.contains(fieldname) ) eh->set(query[fieldname]);
     }
 public:
     string& id() { return _sessionid; }

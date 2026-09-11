@@ -49,6 +49,13 @@ enum class e_persistence_type
     blob,
 };
 
+enum class e_event_type
+{
+    set,
+    next,
+    back,
+    done,
+};
 
 // Placeholder type
 class NoneType {};
@@ -73,10 +80,7 @@ public:
 
 class Type : public ErrIf {};
 
-// When adding arrays, probably we should treat Attrib as the settable
-// Then whole array can be seen as one editing step, with its own buttons
-// like Add, Delete and Edit. Back on an array will take to its previous field
-class Settable : public Type
+class EventHandler : public Type
 {
 protected:
     bool _is_set = false;
@@ -89,18 +93,18 @@ class Response
 {
     ostringstream _resp;
     bool _found_input = false;
-    Settable *_settable = nullptr;
-    Settable *_last_settable = nullptr;
+    EventHandler *_eh = nullptr;
+    EventHandler *_last_eh = nullptr;
     bool _have_button = false;
 public:
     HtmlFormatter hf {_resp};
-    Settable* settable() { return _settable; }
+    EventHandler* eh() { return _eh; }
     void unsetPrev()
     {
-        if ( _last_settable != nullptr )
+        if ( _last_eh != nullptr )
         {
-            _last_settable->unset();
-            _last_settable = nullptr;
+            _last_eh->unset();
+            _last_eh = nullptr;
         }
     }
     // clear after sending every response
@@ -115,16 +119,16 @@ public:
     // clear would be called by the previous response, no need to repeat
     void reset()
     {
-        _settable = nullptr;
-        _last_settable = nullptr;
+        _eh = nullptr;
+        _last_eh = nullptr;
     }
-    void setLast(Settable *settable)
+    void setLast(EventHandler *eh)
     {
-        _last_settable = settable;
+        _last_eh = eh;
     }
-    void foundInput(Settable *settable)
+    void foundInput(EventHandler *eh)
     {
-        _settable = settable;
+        _eh = eh;
         _found_input = true;
     }
     void addedButton() { _have_button = true; }
@@ -133,7 +137,7 @@ public:
     void buttons()
     {
         hf.tag_open(kwd_div,{kwd_buttons});
-        if ( _last_settable != nullptr )
+        if ( _last_eh != nullptr )
             hf.button(kwd_back,kwd_empty,kwd_back);
         if ( not _have_button )
         {
@@ -146,7 +150,7 @@ public:
     }
 };
 
-class ElementaryType : public Settable
+class ElementaryType : public EventHandler
 {
 public:
     virtual void getInputWidget(Response&,string_view)=0;
