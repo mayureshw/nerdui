@@ -48,25 +48,38 @@ class Session
     }
     void updateState(Query& query)
     {
-        auto eh = _resp.eh();
-        if ( not eh ) return;
-        auto fieldname = string(kwd_fldid);
-        if ( query.contains(fieldname) ) eh->set(query[fieldname]);
-    }
-public:
-    string& id() { return _sessionid; }
-    string getResponse(Query& query)
-    {
-        if ( query.contains(string(kwd_back)) )
-            _resp.unsetPrev();
-        else if ( query.contains(string(kwd_done)) )
+        e_event_type event = query.contains(string(kwd_eid))
+            ? static_cast<e_event_type>(stoi(query[string(kwd_eid)]))
+            : E_SET;
+        switch(event)
         {
+        case E_SET:
+        case E_NEXT: {
+            auto dat = query.contains(string(kwd_dat))
+                ? query[string(kwd_dat)] : kwd_empty;
+            auto eh = _resp.eh();
+            if ( eh ) eh->handleEvent(event,dat);
+            break;
+            }
+        case E_BACK: {
+            auto lasteh = _resp.last_eh();
+            if ( lasteh ) {
+                lasteh->handleEvent(event,kwd_empty);
+                _resp.resetLast();
+                }
+            break;
+            }
+        case E_DONE: {
             // Shall we really do memory op or recycle existing object
             delete _sessionobj;
             _sessionobj = new DefaultSessionType();
             _resp.reset();
+            break;
+            }
         }
-        else updateState(query);
+    }
+    string _getResponse()
+    {
         kainjow::mustache::data data;
         data.set(kwd_sessionid, _sessionid);
         _sessionobj->getResponse<NoneType,0>(_resp);
@@ -74,6 +87,13 @@ public:
         data.set(kwd_form,_resp.str());
         _resp.clear();
         return tmpl_resp().render(data);
+    }
+public:
+    string& id() { return _sessionid; }
+    string getResponse(Query& query)
+    {
+        updateState(query);
+        return _getResponse();
     }
     Session()
     {

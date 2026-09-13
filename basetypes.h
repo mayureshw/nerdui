@@ -14,7 +14,8 @@
 using namespace std;
 
 constexpr string_view
-    kwd_fldid       = "0",
+    kwd_dat         = "dat",
+    kwd_eid         = "eid",
     kwd_buttons     = "buttons",
     kwd_field       = "field",
     kwd_field_name  = "field-name",
@@ -49,12 +50,19 @@ enum class e_persistence_type
     blob,
 };
 
-enum class e_event_type
+enum e_event_type
 {
-    set,
-    next,
-    back,
-    done,
+    E_SET,
+    E_NEXT,
+    E_BACK,
+    E_DONE,
+};
+
+enum e_state
+{
+    S_NOTSET,
+    S_SETOK,
+    S_SETERR,
 };
 
 // Placeholder type
@@ -82,11 +90,8 @@ class Type : public ErrIf {};
 
 class EventHandler : public Type
 {
-protected:
-    bool _is_set = false;
 public:
-    virtual void set(string_view)=0;
-    void unset() { _is_set = false; }
+    virtual void handleEvent(e_event_type,string_view)=0;
 };
 
 class Response
@@ -99,14 +104,7 @@ class Response
 public:
     HtmlFormatter hf {_resp};
     EventHandler* eh() { return _eh; }
-    void unsetPrev()
-    {
-        if ( _last_eh != nullptr )
-        {
-            _last_eh->unset();
-            _last_eh = nullptr;
-        }
-    }
+    EventHandler* last_eh() { return _last_eh; }
     // clear after sending every response
     void clear()
     {
@@ -119,7 +117,11 @@ public:
     // clear would be called by the previous response, no need to repeat
     void reset()
     {
-        _eh = nullptr;
+        setLast(nullptr);
+        resetLast();
+    }
+    void resetLast()
+    {
         _last_eh = nullptr;
     }
     void setLast(EventHandler *eh)
@@ -134,17 +136,18 @@ public:
     void addedButton() { _have_button = true; }
     bool isInputFound() { return _found_input; }
     string str() { return _resp.str(); }
+    string ec(e_event_type e) { return to_string(e); }
     void buttons()
     {
         hf.tag_open(kwd_div,{kwd_buttons});
         if ( _last_eh != nullptr )
-            hf.button(kwd_back,kwd_empty,kwd_back);
+            hf.button(kwd_eid,ec(E_BACK),kwd_back);
         if ( not _have_button )
         {
             if ( isInputFound() )
-                hf.button(kwd_next,kwd_empty,kwd_next);
+                hf.button(kwd_eid,ec(E_NEXT),kwd_next);
             else
-                hf.button(kwd_done,kwd_empty,kwd_done);
+                hf.button(kwd_eid,ec(E_DONE),kwd_done);
         }
         hf.tag_close(kwd_buttons);
     }
@@ -152,7 +155,25 @@ public:
 
 class ElementaryType : public EventHandler
 {
+protected:
+    e_state _state = S_NOTSET;
 public:
+    virtual void set(string_view)=0;
+    void handleEvent(e_event_type event, string_view dat)
+    {
+        switch(event)
+        {
+        case E_SET:
+        case E_NEXT:
+            set(dat);
+            break;
+        case E_BACK:
+            _state = S_NOTSET;
+            break;
+        case E_DONE:
+            break;
+        }
+    }
     virtual void getInputWidget(Response&,string_view)=0;
     virtual string_view get_value_view()=0;
     void getPreview(Response& resp, string_view adescr)
@@ -164,13 +185,13 @@ public:
     void getResponse(Response& resp)
     {
         constexpr string_view adescr = ContainedIn::_adescr[ordpos];
-        if ( not _is_set )
-        {
+        switch(_state) {
+        case S_NOTSET:
             getInputWidget(resp,adescr);
             resp.foundInput(this);
-        }
-        else
-        {
+            break;
+        case S_SETOK:
+        case S_SETERR:
             getPreview(resp,adescr);
             resp.setLast(this);
         }
@@ -184,12 +205,12 @@ public:
     void set(string_view val)
     {
         _val = val;
-        _is_set = true;
+        _state = S_SETOK;
         clearErr();
     }
     void getInputWidget(Response& resp, string_view adescr)
     {
-        resp.hf.textinput(adescr,kwd_fldid);
+        resp.hf.textinput(adescr,kwd_dat);
     }
     string_view get_value_view() { return _val; }
 };
@@ -201,7 +222,7 @@ template <typename D, typename E> class Domain : public ElementaryType
     void _set(E eval)
     {
         _val = eval;
-        _is_set = true;
+        _state = S_SETOK;
         clearErr();
     }
 public:
@@ -213,7 +234,7 @@ public:
 
         if constexpr (D::_choice_widget == e_choice_widget::dropdown)
         {
-            resp.hf.select_open(kwd_fldid);
+            resp.hf.select_open(kwd_dat);
             resp.hf.nl();
             for (size_t i = 0; i < D::_domainsz; i++)
             {
@@ -226,13 +247,13 @@ public:
         {
             resp.hf.br();
             for (size_t i = 0; i < D::_domainsz; i++)
-                resp.hf.radio(kwd_fldid, D::_codes[i], D::_vdescr[i]);
+                resp.hf.radio(kwd_dat, D::_codes[i], D::_vdescr[i]);
         }
         else if constexpr (D::_choice_widget == e_choice_widget::button)
         {
             resp.hf.tag_open(kwd_div,{kwd_buttons});
             for (size_t i = 0; i < D::_domainsz; i++)
-                resp.hf.button(kwd_fldid, D::_codes[i], D::_vdescr[i]);
+                resp.hf.button(kwd_dat, D::_codes[i], D::_vdescr[i]);
             resp.hf.tag_close(kwd_div);
             resp.addedButton();
         }
