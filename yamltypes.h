@@ -9,7 +9,7 @@ protected:
     string _descr;
     void parse_descr(const Y_Node& node)
     {
-        _descr = parse_dynamic_string(node);
+        _descr = parse_scalar<string>(node);
     }
     void parse_kind(const Y_Node& node) {}
 public:
@@ -107,7 +107,7 @@ class UnionCases : public YamlIf
     OrderedMap<string,string> _keytyp;
     string parse_type(const Y_Node& node)
     {
-        auto type = parse_dynamic_string(node);
+        auto type = parse_scalar<string>(node);
         check_type_exists(node,type);
         return type;
     }
@@ -172,7 +172,7 @@ public:
     OrderedMap<string,UnionCases*> _typ_cases;
     void parse_selector_typ(const Y_Node& node)
     {
-        _selectorTyp = parse_dynamic_string(node);
+        _selectorTyp = parse_scalar<string>(node);
         auto typ = check_type_exists(node,_selectorTyp);
         _selectorIsUnion = typ->is_union() ;
     }
@@ -228,20 +228,20 @@ class Attrib : public YamlIf
     bool _type_is_union;
     string _selector;
     string _persistence_type { kwd_transient };
-    uint32_t _card_min = 0;
-    uint32_t _card_max = 1;
+    size_t _card_min = 0;
+    size_t _card_max = 1;
     void parse_descr(const Y_Node& node)
     {
-        _descr = parse_dynamic_string(node);
+        _descr = parse_scalar<string>(node);
     }
     void parse_type(const Y_Node& node)
     {
-        _type = parse_dynamic_string(node);
+        _type = parse_scalar<string>(node);
         _type_is_union = check_type_exists(node,_type)->is_union();
     }
     void parse_selector(const Y_Node& node, const AttribMap& attribs)
     {
-        _selector = parse_dynamic_string(node);
+        _selector = parse_scalar<string>(node);
         if ( not attribs.contains(_selector) )
         {
             cerr << "Selector used before declaring " << _selector;
@@ -252,6 +252,11 @@ class Attrib : public YamlIf
     void parse_persistence_type(const Y_Node& node)
     {
         _persistence_type = parse_static_string(node,dom_persistence_type);
+    }
+    void parse_card_max(const Y_Node& node)
+    {
+        auto card_max = parse_scalar<int>(node);
+        _card_max = card_max < 0 ? SIZE_MAX : card_max;
     }
     void validate(const Y_Node& node)
     {
@@ -274,7 +279,10 @@ public:
         d.set(string(kwd_selector),_selector);
         d.set(string(kwd_has_selector),!_selector.empty());
         d.set(string(kwd_card_min),to_string(_card_min));
-        d.set(string(kwd_card_max),to_string(_card_max));
+        d.set(string(kwd_card_max),
+            _card_max == SIZE_MAX
+            ? string(kwd_size_max)
+            : to_string(_card_max));
         d.set(string(kwd_persistence_type),_persistence_type);
         return d;
     }
@@ -286,6 +294,7 @@ public:
                 { kwd_type, PARSE(type) },
                 { kwd_selector, PARSE(selector,attribs) },
                 { kwd_persistence_type, PARSE(persistence_type) },
+                { kwd_card_max, PARSE(card_max) },
             };
         KeySet mandatory { kwd_type };
         handle_static_map(node, hmap, mandatory);

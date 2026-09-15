@@ -55,7 +55,8 @@ constexpr string_view
     kwd_blob             = "blob",
     kwd_String           = "String",
     kwd_contained_in     = "contained_in",
-    kwd_ordpos           = "ordpos";
+    kwd_ordpos           = "ordpos",
+    kwd_size_max         = "SIZE_MAX";
 
 // generated file names
 constexpr string_view
@@ -170,10 +171,11 @@ public:
         auto& ret = node[key];
         return ret;
     }
-    string parse_dynamic_string(const Y_Node& node)
+    template <typename T>
+    T parse_scalar(const Y_Node& node)
     {
         expectType<Y_Scalar>(node);
-        return node.as<string>();
+        return node.as<T>();
     }
     string_view parse_static_string(const Y_Node& node, const KeySet& domain)
     {
@@ -187,7 +189,10 @@ public:
         print_err_loc(node);
         exit(1);
     }
-
+    string parse_dynamic_string(const Y_Node& node)
+    {
+        return parse_scalar<string>(node);
+    }
     // static map handle descends one level, no return value expected from child
     // child handler should have some side effect
     static void handle_static_map(const Y_Node& node, HandlerMap<void>& hmap,

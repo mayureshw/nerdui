@@ -27,6 +27,7 @@ constexpr string_view
     kwd_back        = "Back",
     kwd_next        = "Next",
     kwd_done        = "Done",
+    kwd_no_data     = "No data.",
     kwd_empty       = "";
 
 #include "htmlformatter.h"
@@ -328,6 +329,19 @@ public:
     }
 };
 
+template <typename T, size_t card_min, size_t card_max>
+class Array : public Type
+{
+    vector<T> _arr;
+public:
+    template<typename ContainedIn, size_t ordpos>
+    void getResponse(Response& resp)
+    {
+        if ( _arr.size() == 0 )
+            resp.hf.span(kwd_no_data);
+    }
+};
+
 template <
     typename ContainedIn,
     size_t ordpos,
@@ -337,26 +351,17 @@ template <
     e_persistence_type persistence_type>
 class Attrib
 {
-    static_assert(
-        card_max == 1 || is_default_constructible_v<T>,
-        "Non-scalar Attrib requires default-constructible T"
-    );
 
     static constexpr bool is_scalar    = ( card_max == 1 );
-    static constexpr bool is_unbounded = ( card_max < 0  );
-    static constexpr bool is_bounded   = ( card_max > 1  );
 
     using AttrTyp =
-        conditional_t< is_scalar, T,
-        conditional_t< is_unbounded, vector<T>,
-        array<T, card_max>>>;
+        conditional_t< is_scalar, T, Array<T,card_min,card_max> >;
 
     AttrTyp _val;
 public:
     template<typename ContainedInParent, size_t ordposParent>
     void getResponse(Response& resp)
     {
-        static_assert( is_scalar, "getResponse not implemented for vectors" );
         _val.template getResponse<ContainedIn,ordpos>(resp);
     }
     T& get() requires (card_max == 1) { return _val; }
