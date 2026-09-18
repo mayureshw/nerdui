@@ -17,13 +17,14 @@ constexpr string_view
     kwd_dat         = "dat",
     kwd_eid         = "eid",
     kwd_buttons     = "buttons",
+    kwd_action      = "action",
+    kwd_choice      = "choice",
     kwd_field       = "field",
     kwd_field_name  = "field-name",
     kwd_field_value = "field-value",
     kwd_label       = "label",
     kwd_div         = "div",
     kwd_span        = "span",
-    kwd_action      = "action",
     kwd_back        = "Back",
     kwd_next        = "Next",
     kwd_done        = "Done",
@@ -57,13 +58,6 @@ enum e_event_type
     E_NEXT,
     E_BACK,
     E_DONE,
-};
-
-enum e_state
-{
-    S_NOTSET,
-    S_SETOK,
-    S_SETERR,
 };
 
 // Placeholder type
@@ -140,7 +134,7 @@ public:
     string ec(e_event_type e) { return to_string(e); }
     void buttons()
     {
-        hf.tag_open(kwd_div,{kwd_buttons});
+        hf.tag_open(kwd_div,{kwd_buttons,kwd_action});
         if ( _last_eh != nullptr )
             hf.button(kwd_eid,ec(E_BACK),kwd_back);
         if ( not _have_button )
@@ -157,7 +151,13 @@ public:
 class ElementaryType : public EventHandler
 {
 protected:
-    e_state _state = S_NOTSET;
+    enum e_scalar_state
+    {
+        S_NOTSET,
+        S_SETOK,
+        S_SETERR,
+    };
+    e_scalar_state _state = S_NOTSET;
 public:
     virtual void set(string_view)=0;
     void handleEvent(e_event_type event, string_view dat)
@@ -252,7 +252,7 @@ public:
         }
         else if constexpr (D::_choice_widget == e_choice_widget::button)
         {
-            resp.hf.tag_open(kwd_div,{kwd_buttons});
+            resp.hf.tag_open(kwd_div,{kwd_buttons,kwd_choice});
             for (size_t i = 0; i < D::_domainsz; i++)
                 resp.hf.button(kwd_dat, D::_codes[i], D::_vdescr[i]);
             resp.hf.tag_close(kwd_div);
@@ -332,13 +332,27 @@ public:
 template <typename T, size_t card_min, size_t card_max>
 class Array : public Type
 {
+    enum e_vector_state
+    {
+        S_NOTVISITED,
+        S_PREVIEWING,
+        S_ADDING,
+        S_PASSEDOVER,
+    };
     vector<T> _arr;
+    e_vector_state _state = S_NOTVISITED;
+    void arrayPreview(Response& resp)
+    {
+        if ( _arr.size() == 0 )
+            resp.hf.span(kwd_no_data);
+        else
+            resp.hf.span("array preview todo");
+    }
 public:
     template<typename ContainedIn, size_t ordpos>
     void getResponse(Response& resp)
     {
-        if ( _arr.size() == 0 )
-            resp.hf.span(kwd_no_data);
+        arrayPreview(resp);
     }
 };
 

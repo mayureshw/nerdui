@@ -5,7 +5,7 @@
     gap: 10px;
 }
 
-button {
+.buttons.action button {
     background-color: #2563eb;
     color: white;
     border: none;
@@ -14,13 +14,31 @@ button {
     cursor: pointer;
 }
 
-button:hover {
+.buttons.action button:hover {
     background: #1d4ed8;
 }
 
-button:focus-visible {
+.buttons.action button:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px #93c5fd;
+}
+
+.buttons.choice button {
+    background-color: #0f766e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5em 1em;
+    cursor: pointer;
+}
+
+.buttons.choice button:hover {
+    background: #115e59;
+}
+
+.buttons.choice button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px #99f6e4;
 }
 
 select {
